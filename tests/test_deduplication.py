@@ -31,6 +31,26 @@ class DeduplicationTests(unittest.TestCase):
 
         self.assertEqual([article.fingerprint for article in unique_articles], ["fingerprint-b"])
 
+    def test_deduplicate_articles_removes_known_urls(self) -> None:
+        article = Article(
+            source_name="Feed",
+            source_url="https://example.com/feed.xml",
+            canonical_url="https://example.com/same-story",
+            title="Same story with new fingerprint",
+            published_at=datetime(2026, 3, 9, tzinfo=timezone.utc),
+            summary="Summary",
+            content="Content",
+            fingerprint="fresh-fingerprint",
+        )
+
+        unique_articles = deduplicate_articles(
+            [article],
+            known_fingerprints=set(),
+            known_urls={"https://example.com/same-story"},
+        )
+
+        self.assertEqual(unique_articles, [])
+
 
 if __name__ == "__main__":
     unittest.main()

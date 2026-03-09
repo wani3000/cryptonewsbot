@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable, Set
+from typing import Iterable, Set, Tuple
 
 from cryptonewsbot.database import connect
 from cryptonewsbot.domain.models import Article, FeedFetchResult, GeneratedPost
@@ -24,6 +24,23 @@ class SQLiteRepository:
         finally:
             connection.close()
 
+    def get_recent_delivered_article_keys(self, since: datetime) -> Tuple[Set[str], Set[str]]:
+        connection = connect(self._database_path)
+        try:
+            rows = connection.execute(
+                """
+                SELECT fingerprint, canonical_url
+                FROM delivered_articles
+                WHERE delivered_at >= ?
+                """,
+                (since.isoformat(),),
+            ).fetchall()
+            fingerprints = {row["fingerprint"] for row in rows}
+            canonical_urls = {row["canonical_url"] for row in rows}
+            return fingerprints, canonical_urls
+        finally:
+            connection.close()
+
     def save_run(
         self,
         run_id: str,
@@ -38,7 +55,15 @@ class SQLiteRepository:
             article_list = list(articles)
             post_list = list(posts)
             feed_result_list = list(feed_results)
+            persisted_article_ids: dict[str, str] = {}
             for article in article_list:
+                existing = connection.execute(
+                    "SELECT id FROM articles WHERE fingerprint = ?",
+                    (article.fingerprint,),
+                ).fetchone()
+                if existing is not None:
+                    persisted_article_ids[article.id] = existing["id"]
+                    continue
                 connection.execute(
                     """
                     INSERT OR IGNORE INTO articles (
@@ -59,6 +84,7 @@ class SQLiteRepository:
                         article.collected_at.isoformat(),
                     ),
                 )
+                persisted_article_ids[article.id] = article.id
             connection.execute(
                 """
                 INSERT INTO runs (id, started_at, article_count, post_count, delivered_to_telegram, feed_error_count)
@@ -98,13 +124,28 @@ class SQLiteRepository:
                     (
                         post.id,
                         run_id,
-                        post.article_id,
+                        persisted_article_ids.get(post.article_id, post.article_id),
                         post.headline,
                         post.body,
                         post.telegram_body,
                         post.created_at.isoformat(),
                     ),
                 )
+            if delivered_to_telegram:
+                for article in article_list:
+                    connection.execute(
+                        """
+                        INSERT INTO delivered_articles (run_id, fingerprint, canonical_url, title, delivered_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            run_id,
+                            article.fingerprint,
+                            article.canonical_url,
+                            article.title,
+                            started_at.isoformat(),
+                        ),
+                    )
             connection.commit()
         finally:
             connection.close()

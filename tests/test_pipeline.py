@@ -3,6 +3,7 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from cryptonewsbot.application.pipeline import run_daily_digest
 from cryptonewsbot.config import AppConfig
@@ -65,6 +66,7 @@ class PipelineTests(unittest.TestCase):
                 telegram_bot_token=None,
                 telegram_chat_id=None,
                 max_articles=5,
+                repeat_suppression_hours=24,
                 dry_run=True,
             )
 
@@ -79,7 +81,7 @@ class PipelineTests(unittest.TestCase):
             self.assertIn("[1] News", output.telegram_messages[0])
             self.assertNotIn("ChainBounty Post", output.telegram_messages[1])
 
-    def test_run_daily_digest_can_generate_same_recent_article_on_repeated_runs(self) -> None:
+    def test_run_daily_digest_can_generate_same_recent_article_on_repeated_dry_runs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             feed_path = root / "feed.xml"
@@ -114,6 +116,7 @@ class PipelineTests(unittest.TestCase):
                 telegram_bot_token=None,
                 telegram_chat_id=None,
                 max_articles=5,
+                repeat_suppression_hours=24,
                 dry_run=True,
             )
 
@@ -122,6 +125,53 @@ class PipelineTests(unittest.TestCase):
 
             self.assertEqual(len(first_output.run_result.posts), 1)
             self.assertEqual(len(second_output.run_result.posts), 1)
+
+    def test_run_daily_digest_suppresses_recently_delivered_articles(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            feed_path = root / "feed.xml"
+            feed_path.write_text(RSS_FIXTURE, encoding="utf-8")
+            style_path = root / "style.json"
+            style_path.write_text(
+                textwrap.dedent(
+                    """\
+                    {
+                      "display_name": "Analyst",
+                      "tone": "concise",
+                      "audience": "operators",
+                      "output_language": "en",
+                      "writing_guidelines": ["Keep it factual"],
+                      "preferred_cta": "Verify before acting.",
+                      "focus_topics": ["bitcoin", "etf"],
+                      "forbidden_phrases": [],
+                      "signature": "Tracked",
+                      "hashtags": ["#btc"],
+                      "max_posts": 3,
+                      "max_post_length": 280
+                    }
+                    """
+                ),
+                encoding="utf-8",
+            )
+            config = AppConfig(
+                database_path=root / "app.db",
+                style_profile_path=style_path,
+                feed_config_path=root / "feeds.json",
+                feed_urls=[feed_path.resolve().as_uri()],
+                telegram_bot_token="token",
+                telegram_chat_id="chat",
+                max_articles=5,
+                repeat_suppression_hours=24,
+                dry_run=False,
+            )
+
+            with patch("cryptonewsbot.application.pipeline.TelegramClient.send_messages", return_value=True):
+                first_output = run_daily_digest(config)
+                second_output = run_daily_digest(config)
+
+            self.assertEqual(len(first_output.run_result.posts), 1)
+            self.assertEqual(len(second_output.run_result.posts), 0)
+            self.assertIn("No new crypto news matched", second_output.digest_text)
 
     def test_config_can_load_default_feed_urls_from_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -167,6 +217,7 @@ class PipelineTests(unittest.TestCase):
                 telegram_bot_token=None,
                 telegram_chat_id=None,
                 max_articles=5,
+                repeat_suppression_hours=24,
                 dry_run=True,
             )
 

@@ -37,14 +37,18 @@ def run_daily_digest(config: AppConfig) -> PipelineOutput:
         dry_run=config.dry_run,
     )
 
-    window_start = datetime.now(timezone.utc) - timedelta(hours=24)
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(hours=24)
+    delivered_since = now - timedelta(hours=config.repeat_suppression_hours)
+    known_fingerprints, known_urls = repository.get_recent_delivered_article_keys(delivered_since)
     collection_result = collector.collect_since(config.resolved_feed_urls, window_start)
     normalized_articles = [
         normalize_article(item, source_url=item["source_url"]) for item in collection_result.items
     ]
     unique_articles = deduplicate_articles(
         normalized_articles,
-        known_fingerprints=set(),
+        known_fingerprints=known_fingerprints,
+        known_urls=known_urls,
     )
     selected_articles = select_relevant_articles(unique_articles, style_profile, config.max_articles)
     summaries = summarize_articles(selected_articles, style_profile)
@@ -56,7 +60,7 @@ def run_daily_digest(config: AppConfig) -> PipelineOutput:
     run_id = str(uuid4())
     repository.save_run(
         run_id=run_id,
-        started_at=datetime.now(timezone.utc),
+        started_at=now,
         articles=selected_articles,
         posts=posts,
         feed_results=collection_result.feed_results,

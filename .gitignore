@@ -3,3 +3,4 @@ cryptonewsbot.db
 __pycache__/
 .pytest_cache/
 logs/*.log
+bots-runtime/

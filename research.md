@@ -66,6 +66,8 @@
   - 로컬 운영 실행 스크립트
 - `scripts/install_launchd.sh`
   - macOS `launchd` LaunchAgent 설치 스크립트
+- `scripts/deploy_local_runtime.sh`
+  - 현재 작업본을 `~/bots/cryptonewsbot`으로 동기화하고, 그 위치에서 LaunchAgent를 재설치
 - `deploy/com.chainbounty.cryptonewsbot.daily.plist.template`
   - 로컬 배포용 LaunchAgent 템플릿
 
@@ -90,6 +92,7 @@
 3. `RSSCollector`가 RSS/Atom 피드에서 지난 24시간 기사를 수집하고, 피드별 성공/실패 상태를 기록한다.
 4. `normalize_article`이 URL, 텍스트, fingerprint를 표준화한다.
 5. `deduplicate_articles`가 기존 저장 기사와 중복을 제거한다.
+   - 최근 실제 텔레그램 전송 이력 기준 fingerprint와 canonical URL도 함께 차단한다.
 6. `select_relevant_articles`가 스타일 프로필의 `focus_topics` 기준으로 관련 기사만 우선 선별한다.
 7. `summarize_articles`가 기사 유형을 `incident/statistical/discussion`으로 분류하고 summary structure를 만든다.
 8. `generate_posts`가 유형별 구조를 반영해 X용 포스트를 생성한다.
@@ -112,12 +115,14 @@
   - 실행 결과로 생성된 X용 포스트 저장
 - `feed_fetch_results`
   - 피드별 수집 성공/실패, 아이템 수, 에러 메시지 저장
+- `delivered_articles`
+  - 실제 텔레그램 전송된 기사 fingerprint/canonical URL 이력 저장
 
 중복 제거 방식:
 
 - `normalize_article`에서 `title + canonical_url + summary[:280]` 기반 SHA-256 fingerprint 생성
 - `articles.fingerprint`에 `UNIQUE` 제약 적용
-- 파이프라인에서 기존 fingerprint를 읽어 선제 제거
+- 파이프라인에서 최근 실제 전송 이력의 fingerprint/canonical URL을 읽어 선제 제거
 
 ### 6. 비즈니스 로직 분석
 
@@ -173,7 +178,8 @@
 - Git 저장소는 아직 없지만, 로컬 운영 배포는 macOS `launchd` 기준으로 구성 가능하다.
 - `scripts/install_launchd.sh`는 `~/Library/LaunchAgents/com.chainbounty.cryptonewsbot.daily.plist`를 생성하고 등록한다.
 - 기본 실행 시각은 매일 09:00 로컬 시간이다.
-- 다만 현재 저장소 경로가 `/Users/hanwha/Documents/...` 이라서, `launchd`가 `Operation not permitted`로 스크립트 파일 접근에 실패한다. 이는 코드 버그가 아니라 macOS 보호 폴더 권한 제약이다.
+- 개발 저장소가 `/Users/hanwha/Documents/...` 아래에 있어 `launchd` 직접 실행은 `Operation not permitted`로 실패할 수 있다.
+- 이를 피하기 위해 런타임 경로를 `~/bots/cryptonewsbot`로 분리하고, LaunchAgent는 그 복사본만 실행하도록 조정했다.
 
 ## 구현 대상 기능과 직접 연관된 조사 결과
 
@@ -241,3 +247,5 @@
 - 텔레그램 뉴스 제목과 생성문 도입부에 기사 유형별 이모지를 붙여 가독성을 높였음을 기록
 - macOS `launchd` 기준 로컬 배포 스크립트와 LaunchAgent 템플릿을 추가했음을 기록
 - `launchd` 실실행이 `Documents` 폴더 접근 제한으로 막히는 운영 제약을 확인했음을 기록
+- 최근 실제 전송된 기사만 `repeat suppression` 윈도우 동안 다시 보내지 않도록 `delivered_articles` 기반 dedupe를 추가했음을 기록
+- 로컬 Mac 상시 운영용으로 `~/bots/cryptonewsbot` 런타임 동기화 스크립트를 추가했음을 기록

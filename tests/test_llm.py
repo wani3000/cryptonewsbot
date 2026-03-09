@@ -31,6 +31,7 @@ class LLMTests(unittest.TestCase):
             telegram_bot_token=None,
             telegram_chat_id=None,
             max_articles=5,
+            repeat_suppression_hours=24,
             dry_run=True,
             llm_provider="gemini",
             llm_api_key="key",

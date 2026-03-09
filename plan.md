@@ -289,6 +289,26 @@ def run_daily_digest(now: datetime) -> None:
 - 이유
   - 배포 정의와 실제 운영 가능성은 다르며, 현재 제약은 코드가 아니라 macOS 보호 폴더 접근 정책이기 때문
 
+### Iteration 8
+
+- 상태: 반복 전송 방지 반영 완료
+- 변경 사항
+  - `delivered_articles` 테이블 추가
+  - 최근 실제 전송된 기사 fingerprint/canonical URL 기준 suppression 추가
+  - dry-run 반복 생성은 유지하고, 실제 전송된 기사만 다음 실행에서 차단하도록 테스트 추가
+- 이유
+  - 같은 기사나 사실상 같은 게시글이 텔레그램에 반복 전송되는 운영 이슈를 막기 위함
+
+### Iteration 9
+
+- 상태: 로컬 Mac 상시 운영 경로 전환 진행 중
+- 변경 사항
+  - 스크립트들의 저장소 경로 하드코딩 제거
+  - `~/bots/cryptonewsbot` 런타임 복사본 동기화 스크립트 추가
+  - LaunchAgent가 개발용 `Documents` 경로 대신 런타임 경로를 실행하도록 전환
+- 이유
+  - macOS 보호 폴더 제약 없이 `launchd`가 안정적으로 실행되게 만들기 위함
+
 ### Iteration 5
 
 - 상태: 운영 베이스라인 완료

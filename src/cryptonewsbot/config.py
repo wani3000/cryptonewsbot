@@ -22,6 +22,7 @@ class AppConfig:
     telegram_bot_token: str | None
     telegram_chat_id: str | None
     max_articles: int
+    repeat_suppression_hours: int
     dry_run: bool
     llm_provider: str = "disabled"
     llm_api_key: str | None = None
@@ -34,6 +35,7 @@ class AppConfig:
         raw_feed_urls = os.getenv("CRYPTO_NEWSBOT_FEED_URLS", "")
         feed_urls = [item.strip() for item in raw_feed_urls.split(",") if item.strip()]
         max_articles = int(os.getenv("CRYPTO_NEWSBOT_MAX_ARTICLES", "10"))
+        repeat_suppression_hours = int(os.getenv("CRYPTO_NEWSBOT_REPEAT_SUPPRESSION_HOURS", "24"))
         return cls(
             database_path=Path(os.getenv("CRYPTO_NEWSBOT_DATABASE_PATH", "./cryptonewsbot.db")),
             style_profile_path=Path(
@@ -46,6 +48,7 @@ class AppConfig:
             telegram_bot_token=_optional_env("CRYPTO_NEWSBOT_TELEGRAM_BOT_TOKEN"),
             telegram_chat_id=_optional_env("CRYPTO_NEWSBOT_TELEGRAM_CHAT_ID"),
             max_articles=max_articles,
+            repeat_suppression_hours=max(repeat_suppression_hours, 0),
             dry_run=os.getenv("CRYPTO_NEWSBOT_DRY_RUN", "true").lower() == "true",
             llm_provider=os.getenv("CRYPTO_NEWSBOT_LLM_PROVIDER", "disabled").strip().lower(),
             llm_api_key=_optional_env("CRYPTO_NEWSBOT_LLM_API_KEY")
@@ -63,6 +66,8 @@ class AppConfig:
             raise ConfigError("CRYPTO_NEWSBOT_FEED_URLS must contain at least one RSS feed URL.")
         if self.max_articles < 1:
             raise ConfigError("CRYPTO_NEWSBOT_MAX_ARTICLES must be greater than 0.")
+        if self.repeat_suppression_hours < 0:
+            raise ConfigError("CRYPTO_NEWSBOT_REPEAT_SUPPRESSION_HOURS must be 0 or greater.")
         if not self.style_profile_path.exists():
             raise ConfigError(f"Style profile file not found: {self.style_profile_path}")
 

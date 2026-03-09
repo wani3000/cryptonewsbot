@@ -6,7 +6,7 @@
 
 ## 현재 작업 컨텍스트
 
-현재는 Python 3.9 표준 라이브러리 중심 MVP가 구현된 상태이며, 운영용 기본 피드 세트와 로컬 `.env` 기반 텔레그램 설정까지 반영되어 있다. 하나의 실행 엔트리포인트에서 RSS/Atom 기반 뉴스 수집, 정규화/중복 제거, 스타일 프로필 기반 relevance filtering, X용 포스트 생성, 선택적 LLM 재작성, 텔레그램 전달, SQLite 저장, 피드별 수집 상태 기록까지 연결되어 있다. 텔레그램 토큰과 `chat_id` 연결, 테스트 메시지 전송, 실제 운영 모드 전환까지 완료됐고, 현재는 OpenAI `gpt-4.1-mini` 실호출이 성공해 LLM 재작성 경로도 활성화된 상태다. 최근에는 사용자 제공 `ChainBounty Writing Style Guide`를 기준으로 프롬프트와 프로필을 재조정했고, 텔레그램은 `뉴스 1개 -> ChainBounty 게시글 1개` 순서로 연속 전송하도록 바뀌었다. 추가로 영구 dedupe 때문에 재실행 시 생성이 비는 문제를 제거했고, ChainBounty용 보안 키워드 relevance를 강화했다. 현재는 일반 시장 뉴스보다 해킹, 사기, 스캠, 자금세탁, 수사 관련 기사만 더 강하게 통과시키고, 생성문 끝에는 ChainBounty 커뮤니티 유입 CTA를 붙인다. Incident 템플릿도 이제 `drainer / phishing / bridge_hack / sanction_seizure / pyramid_scam` 세부 유형별로 갈라진다. 최근 품질 튜닝으로 X용 본문은 길이 제한 없이 생성하고, 필요하면 이후 스레드로 분할할 수 있게 했으며, Telegram용 긴 분석 본문은 별도로 생성한다. 핵심 문장과 제목에는 기사 유형에 맞는 이모지를 붙여 가독성을 높이되, 과장된 감정형 이모지는 피한다.
+현재는 Python 3.9 표준 라이브러리 중심 MVP가 구현된 상태이며, 운영용 기본 피드 세트와 로컬 `.env` 기반 텔레그램 설정까지 반영되어 있다. 하나의 실행 엔트리포인트에서 RSS/Atom 기반 뉴스 수집, 정규화/중복 제거, 스타일 프로필 기반 relevance filtering, X용 포스트 생성, 선택적 LLM 재작성, 텔레그램 전달, SQLite 저장, 피드별 수집 상태 기록까지 연결되어 있다. 텔레그램 토큰과 `chat_id` 연결, 테스트 메시지 전송, 실제 운영 모드 전환까지 완료됐고, 현재는 OpenAI `gpt-4.1-mini` 실호출이 성공해 LLM 재작성 경로도 활성화된 상태다. 최근에는 사용자 제공 `ChainBounty Writing Style Guide`를 기준으로 프롬프트와 프로필을 재조정했고, 텔레그램은 `뉴스 1개 -> ChainBounty 게시글 1개` 순서로 연속 전송하도록 바뀌었다. 추가로 영구 dedupe 때문에 재실행 시 생성이 비는 문제를 제거했고, 대신 최근 실제 전송된 기사만 일정 시간 동안 다시 보내지 않도록 delivery-aware dedupe를 넣었다. ChainBounty용 보안 키워드 relevance도 강화했다. 현재는 일반 시장 뉴스보다 해킹, 사기, 스캠, 자금세탁, 수사 관련 기사만 더 강하게 통과시키고, 생성문 끝에는 ChainBounty 커뮤니티 유입 CTA를 붙인다. Incident 템플릿도 이제 `drainer / phishing / bridge_hack / sanction_seizure / pyramid_scam` 세부 유형별로 갈라진다. 최근 품질 튜닝으로 X용 본문은 길이 제한 없이 생성하고, 필요하면 이후 스레드로 분할할 수 있게 했으며, Telegram용 긴 분석 본문은 별도로 생성한다. 핵심 문장과 제목에는 기사 유형에 맞는 이모지를 붙여 가독성을 높이되, 과장된 감정형 이모지는 피한다.
 
 ## 핵심 디렉토리 구조
 
@@ -55,7 +55,7 @@
 
 ## 작업 진행 상태
 
-- 현재 단계: 로컬 운영 배포 구성 완료, macOS 권한 제약 확인됨
+- 현재 단계: 로컬 Mac 상시 운영용 런타임 배포 진행 중
 - 세부 상태
   - 저장소 조사: 진행 완료
   - 기존 코드 분석: 실제 구현물 기준으로 재분석 완료
@@ -79,6 +79,8 @@
 - 첫 구현은 외부 의존성을 최소화한 단일 Python 애플리케이션 형태다.
 - 실제 운영을 위해서는 RSS 피드 URL, 텔레그램 토큰/채팅 ID, 스타일 프로필을 사용자 환경에 맞게 넣어야 한다.
 - 기본 운영 피드 세트는 [config/feeds/crypto_sources.json](/Users/hanwha/Documents/GitHub/cryptonewsbot/config/feeds/crypto_sources.json)에 들어 있다.
-- 현재 배포 방식은 macOS `launchd`이며, [scripts/install_launchd.sh](/Users/hanwha/Documents/GitHub/cryptonewsbot/scripts/install_launchd.sh)가 `~/Library/LaunchAgents/com.chainbounty.cryptonewsbot.daily.plist`를 설치한다.
-- 기본 스케줄은 매일 09:00 로컬 시간이며, 실행 스크립트는 [run_daily.sh](/Users/hanwha/Documents/GitHub/cryptonewsbot/scripts/run_daily.sh)다.
-- 현재 저장소가 `Documents` 아래에 있어, `launchd` 실행은 macOS 보호 폴더 권한에 막힐 수 있다. 현재 실제 오류는 `Operation not permitted`이며, 안정 운영을 위해서는 저장소를 보호 폴더 밖으로 옮기거나 해당 실행 경로에 적절한 접근 권한을 부여해야 한다.
+- 같은 기사 재전송 방지는 `CRYPTO_NEWSBOT_REPEAT_SUPPRESSION_HOURS`로 제어하며, 기본값은 `24`시간이다.
+- 현재 배포 방식은 macOS `launchd`이며, 개발용 저장소와 분리된 로컬 런타임 복사본을 `~/bots/cryptonewsbot`에 배치해 그 경로를 기준으로 실행한다.
+- 기본 스케줄은 매일 09:00 로컬 시간이다.
+- [deploy_local_runtime.sh](/Users/hanwha/Documents/GitHub/cryptonewsbot/scripts/deploy_local_runtime.sh)가 현재 작업본을 `~/bots/cryptonewsbot`으로 동기화한 뒤, 그 위치에서 [install_launchd.sh](/Users/hanwha/Documents/GitHub/cryptonewsbot/scripts/install_launchd.sh)를 실행한다.
+- 이 구조의 목적은 `Documents` 보호 폴더를 피해서 `launchd`가 안정적으로 스크립트와 DB에 접근하게 만드는 것이다.

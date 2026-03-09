@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -eu
 
-REPO_ROOT="/Users/hanwha/Documents/GitHub/cryptonewsbot"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TEMPLATE_PATH="$REPO_ROOT/deploy/com.chainbounty.cryptonewsbot.daily.plist.template"
 TARGET_DIR="$HOME/Library/LaunchAgents"
 TARGET_PATH="$TARGET_DIR/com.chainbounty.cryptonewsbot.daily.plist"
@@ -12,7 +12,7 @@ mkdir -p "$REPO_ROOT/logs"
 /usr/bin/env python3 - <<'PY'
 from pathlib import Path
 
-repo_root = Path("/Users/hanwha/Documents/GitHub/cryptonewsbot")
+repo_root = Path.cwd()
 template_path = repo_root / "deploy" / "com.chainbounty.cryptonewsbot.daily.plist.template"
 target_path = Path.home() / "Library" / "LaunchAgents" / "com.chainbounty.cryptonewsbot.daily.plist"
 
@@ -28,3 +28,4 @@ PY
 
 echo "Installed LaunchAgent at $TARGET_PATH"
 echo "Schedule: daily at 09:00 local time"
+echo "Runtime path: $REPO_ROOT"

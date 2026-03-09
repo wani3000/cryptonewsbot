@@ -49,6 +49,16 @@ CREATE TABLE IF NOT EXISTS feed_fetch_results (
     error_message TEXT NOT NULL,
     FOREIGN KEY(run_id) REFERENCES runs(id)
 );
+
+CREATE TABLE IF NOT EXISTS delivered_articles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    canonical_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    delivered_at TEXT NOT NULL,
+    FOREIGN KEY(run_id) REFERENCES runs(id)
+);
 """
 
 

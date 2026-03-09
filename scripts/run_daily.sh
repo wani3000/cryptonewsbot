@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -eu
 
-REPO_ROOT="/Users/hanwha/Documents/GitHub/cryptonewsbot"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LOG_DIR="$REPO_ROOT/logs"
 
 mkdir -p "$LOG_DIR"
