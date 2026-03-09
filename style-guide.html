@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChainBounty Writing Style Guide</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #111827;
+        --ink: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22c55e;
+        --warn: #f59e0b;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+        color: var(--ink);
+        font: 16px/1.6 "Helvetica Neue", Arial, sans-serif;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      section {
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+      h1, h2, h3 {
+        margin-top: 0;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      h2 {
+        color: var(--accent);
+        font-size: 1.25rem;
+      }
+      h3 {
+        color: var(--warn);
+        font-size: 1rem;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #020617;
+        padding: 16px;
+        border-radius: 12px;
+        overflow-x: auto;
+      }
+      ul, ol {
+        padding-left: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 10px;
+        text-align: left;
+      }
+      .muted {
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h1>ChainBounty Writing Style Guide</h1>
+        <p class="muted">
+          Security-focused crypto crime reporting and community education.
+        </p>
+      </section>
+
+      <section>
+        <h2>Core Identity</h2>
+        <ul>
+          <li><strong>Mission:</strong> Security-focused crypto crime reporting and community education</li>
+          <li><strong>Tone:</strong> Professional, factual, educational</li>
+          <li><strong>Voice:</strong> Direct, clear, authoritative but accessible</li>
+          <li><strong>Audience:</strong> Crypto users, security researchers, blockchain community</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Structure Templates</h2>
+        <h3>Template A: Incident Report</h3>
+        <pre>[Emoji] **[One-line headline with key number/fact]**
+
+[2-3 sentence summary of what happened]
+
+**What happened:**
+• Key point 1
+• Key point 2
+• Key point 3
+
+[1-2 paragraph explanation in prose]
+
+**Protection measures:**
+✅ Action item 1
+✅ Action item 2
+✅ Action item 3
+
+[Closing insight]
+
+Source: [URL]</pre>
+
+        <h3>Template B: Statistical Report</h3>
+        <pre>[Emoji] **[Title with main statistic]**
+
+[1 sentence context/background]
+
+**[Year/Month] Statistics:**
+• Data point 1
+• Data point 2
+• Data point 3
+• Data point 4
+
+**[Analysis section title]:**
+[Prose explanation]
+
+**[Implication section title]:**
+[Interpretation]
+
+[Final takeaway]
+
+Source: [URL]</pre>
+
+        <h3>Template C: Community Discussion Prompt</h3>
+        <pre>[Emoji] **[Headline posing a question or mystery]**
+
+[Setup]
+
+**[Main details section]:**
+• Detail 1
+• Detail 2
+• Detail 3
+
+**But here's the issue:**
+[Contradiction or mystery]
+
+**Possible scenarios:**
+1. Scenario A
+2. Scenario B
+3. Scenario C
+4. Scenario D
+
+**We want to hear from the community:**
+• Audience type 1
+• Audience type 2
+• Audience type 3
+
+**Join the discussion on ChainBounty Community:**
+👉 https://community.chainbounty.io
+
+[Call to action]
+
+Source: [URL]</pre>
+      </section>
+
+      <section>
+        <h2>Writing Rules</h2>
+        <h3>Sentence Construction</h3>
+        <ul>
+          <li>Use active voice.</li>
+          <li>Keep sentences short.</li>
+          <li>One idea per sentence.</li>
+          <li>Start with the action or subject.</li>
+        </ul>
+        <h3>Preferred Terminology</h3>
+        <ul>
+          <li>"losses" not "damages"</li>
+          <li>"hack" not "cyber incident"</li>
+          <li>"scam" not "fraudulent scheme"</li>
+          <li>"wallet" not "digital wallet"</li>
+          <li>"MEV bot" not "maximal extractable value bot"</li>
+          <li>"exploit" not "vulnerability exploitation"</li>
+        </ul>
+        <h3>Banned Phrases</h3>
+        <ul>
+          <li>absolutely devastating</li>
+          <li>you won't believe</li>
+          <li>shocking revelation</li>
+          <li>in this day and age</li>
+          <li>needless to say</li>
+          <li>it goes without saying</li>
+          <li>I think / We believe / In my opinion</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Formatting Standards</h2>
+        <h3>Emoji Usage</h3>
+        <ul>
+          <li>🚨 Emergency/Alert</li>
+          <li>⚠️ Warning</li>
+          <li>📉 Statistics</li>
+          <li>📊 Analysis</li>
+          <li>🔍 Investigation</li>
+        </ul>
+        <h3>Bullet Rules</h3>
+        <ul>
+          <li>Use bullets for statistics, sequences, action items, and key facts.</li>
+          <li>Do not use bullets for narrative explanations.</li>
+          <li>Keep bullet structure parallel and short.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Quality Checklist</h2>
+        <ul>
+          <li>Numbers are accurate and sourced</li>
+          <li>No speculation presented as fact</li>
+          <li>Headline under 100 characters</li>
+          <li>Opening summarizes everything</li>
+          <li>Professional, factual, educational tone</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

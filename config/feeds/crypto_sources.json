@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "CoinDesk",
+      "url": "https://www.coindesk.com/arc/outboundfeeds/rss",
+      "enabled": true,
+      "notes": "Official CoinDesk RSS feed."
+    },
+    {
+      "name": "Cointelegraph",
+      "url": "https://cointelegraph.com/rss",
+      "enabled": true,
+      "notes": "Official Cointelegraph all-news RSS feed."
+    },
+    {
+      "name": "Decrypt",
+      "url": "https://decrypt.co/feed",
+      "enabled": true,
+      "notes": "Official Decrypt RSS feed."
+    }
+  ]
+}
