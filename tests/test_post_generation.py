@@ -117,7 +117,41 @@ class PostGenerationTests(unittest.TestCase):
 
         posts = generate_posts([summary], profile)
 
-        self.assertIn("Revoke risky approvals", posts[0].body)
+        self.assertIn("Revoke high-risk approvals", posts[0].body)
+        self.assertNotIn("worth tracking", posts[0].body.lower())
+
+    def test_generate_posts_uses_specific_chainbounty_analysis_language(self) -> None:
+        summary = ArticleSummary(
+            article_id="article-2",
+            title="Bridge exploit drains liquidity",
+            source_name="Feed",
+            canonical_url="https://example.com/article-2",
+            key_point="Attackers abused a bridge validation weakness and moved funds across chains.",
+            why_it_matters="Cross-chain custody assumptions failed and users lost funds.",
+            published_at=datetime(2026, 3, 9, tzinfo=timezone.utc),
+            template_type="incident",
+            incident_type="bridge_hack",
+        )
+        profile = StyleProfile(
+            display_name="Analyst",
+            tone="professional",
+            audience="operators",
+            output_language="en",
+            writing_guidelines=["Be concrete"],
+            preferred_cta="Join the discussion on ChainBounty Community: https://community.chainbounty.io/",
+            focus_topics=["hack"],
+            forbidden_phrases=["worth tracking", "interesting case"],
+            signature="ChainBounty",
+            hashtags=["#ChainBounty"],
+            max_posts=3,
+            max_post_length=280,
+        )
+
+        posts = generate_posts([summary], profile)
+
+        self.assertIn("Bridge incidents rarely stay isolated.", posts[0].body)
+        self.assertIn("Reduce exposure to the affected bridge or route", posts[0].body)
+        self.assertNotIn("worth tracking", posts[0].body.lower())
 
     def test_split_x_thread_splits_long_body_into_thread_sized_chunks(self) -> None:
         body = "Paragraph one with enough text to exceed the limit.\n\n" * 8

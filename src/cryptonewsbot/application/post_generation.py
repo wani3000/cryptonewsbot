@@ -113,7 +113,11 @@ def build_system_prompt(style_profile: StyleProfile) -> str:
         "Prefer security reporting language such as losses, hack, scam, wallet, MEV bot, exploit.\n"
         "Write only about crypto security incidents, scams, fraud, wallet drains, laundering, seizures, or investigations.\n"
         "Do not turn generic market news into a ChainBounty post unless the story clearly has a security, scam, or investigation angle.\n"
-        "Add a short ChainBounty analyst takeaway, not just a summary.\n"
+        "Add a ChainBounty analysis section with concrete interpretation, not a vague takeaway.\n"
+        "Explain why the story matters, what bigger pattern it signals, and what users or investigators should expect next.\n"
+        "Do not write vague phrases such as worth tracking, interesting case, potential risk, be careful, or stay safe.\n"
+        "Protection or response steps must match the specific story, platform, region, or attack method.\n"
+        "Do not attach generic wallet approval advice to regulation or policy stories unless the story is directly about wallet approvals.\n"
         "End with a community invitation and include https://community.chainbounty.io/ when space allows.\n"
         "Add one fitting emoji to the headline or opening sentence when it improves clarity.\n"
         "Use fitting emoji choices such as 🚨 for hacks, 🎣 for phishing, 🌉 for bridge exploits, "
@@ -138,7 +142,10 @@ def build_user_prompt(summary: ArticleSummary, style_profile: StyleProfile) -> s
         f"URL: {summary.canonical_url}\n"
         f"Preferred CTA: {style_profile.preferred_cta or 'none'}\n"
         f"Optional hashtags: {hashtags or 'none'}\n"
-        "Create a publication-ready X post and a richer Telegram post for ChainBounty with a stronger security-analysis angle."
+        "Create a publication-ready X post and a richer Telegram post for ChainBounty.\n"
+        "The ChainBounty analysis must be specific, contextual, and useful.\n"
+        "Interpret the broader implication, likely next change, repeat pattern, or investigative signal.\n"
+        "The response or protection section must be directly tied to this story."
     )
 
 
@@ -174,67 +181,76 @@ def trim(value: str, limit: int) -> str:
 def build_incident_analysis(incident_type: str) -> str:
     if incident_type == "drainer":
         return (
-            "This drainer pattern is worth tracking for malicious approvals, rapid wallet emptying, "
-            "and repeat infrastructure reuse."
+            "The core issue is approval abuse at speed. Drainer crews often reuse wallet clusters, kit infrastructure, "
+            "and lure funnels across multiple campaigns. One confirmed fund path can expose a wider victim set and help "
+            "investigators map the next wave before funds fully disappear."
         )
     if incident_type == "phishing":
         return (
-            "This phishing pattern is worth tracking for spoofed fronts, trust hijacking, and user decision points "
-            "that attackers repeatedly exploit."
+            "The main signal here is trust hijacking, not technical sophistication. These campaigns win by impersonating "
+            "brands, support channels, or urgent account actions when users are likely to approve first and verify later. "
+            "Expect the same lure format to reappear across cloned domains and social accounts."
         )
     if incident_type == "bridge_hack":
         return (
-            "This bridge case is worth tracking for validator trust assumptions, cross-chain custody weak points, "
-            "and how quickly attackers can route funds out."
+            "Bridge incidents rarely stay isolated. They expose how much risk sits in cross-chain custody, validator trust, "
+            "or message verification. Once attackers break one weak point, they usually move funds quickly across chains to "
+            "outrun freezes and dilute attribution."
         )
     if incident_type == "sanction_seizure":
         return (
-            "This case is worth tracking for laundering pressure points, exchange compliance gaps, and where legal "
-            "intervention is now reaching onchain crime."
+            "This is not just a policy headline. It shows where legal pressure is reaching the laundering chain and which "
+            "intermediaries may be forced to act faster. Users and platforms should expect stronger freeze, reporting, and "
+            "counterparty screening standards once this kind of enforcement expands."
         )
     if incident_type == "pyramid_scam":
         return (
-            "This scam pattern is worth tracking for false return narratives, recruiter funnels, and the offchain "
-            "social layer that drives victims onchain."
+            "The key pattern is social engineering wrapped in fake yield logic. Pyramid operators scale through recruiter "
+            "funnels and pressure tactics before funds ever touch a wallet. When the narrative depends on guaranteed returns "
+            "and referral acceleration, collapse risk is structural, not accidental."
         )
-    return "This case is worth tracking for attacker behavior, wallet movement, and repeat victim patterns."
+    return (
+        "The key question is whether this was a one-off failure or part of a repeatable playbook. ChainBounty should look "
+        "for the control failure, the money movement pattern, and any sign that the same operators or methods can hit other "
+        "targets next."
+    )
 
 
 def build_protection_measures(incident_type: str) -> str:
     if incident_type == "drainer":
         return (
-            "✅ Revoke risky approvals and review wallet permissions\n"
-            "✅ Separate trading wallets from treasury wallets\n"
-            "✅ Report linked drainer wallets to the ChainBounty community"
+            "✅ Revoke high-risk approvals on the affected wallet path immediately\n"
+            "✅ Move treasury or long-term assets to a wallet with no recent dApp exposure\n"
+            "✅ Share linked drainer wallets, domains, and lure pages with the ChainBounty community"
         )
     if incident_type == "phishing":
         return (
-            "✅ Verify domains, support channels, and signatures before acting\n"
-            "✅ Never enter seed phrases or approve blind prompts\n"
-            "✅ Share phishing indicators with the ChainBounty community"
+            "✅ Confirm the exact domain, support handle, and signature request before interacting\n"
+            "✅ Treat urgent recovery, airdrop, or account-lock messages as hostile until verified\n"
+            "✅ Bring phishing domains, screenshots, and wallet indicators to the ChainBounty community"
         )
     if incident_type == "bridge_hack":
         return (
-            "✅ Reduce bridge exposure during active incidents\n"
-            "✅ Track validator, relayer, and contract update notices\n"
-            "✅ Bring bridge wallet traces to the ChainBounty community"
+            "✅ Reduce exposure to the affected bridge or route until root cause and remediation are confirmed\n"
+            "✅ Review validator, relayer, and contract update notices before resuming transfers\n"
+            "✅ Share bridge wallet traces and cross-chain fund paths with the ChainBounty community"
         )
     if incident_type == "sanction_seizure":
         return (
-            "✅ Monitor sanctioned wallets and suspicious routing paths\n"
-            "✅ Review exchange controls around freeze and reporting flows\n"
-            "✅ Discuss laundering patterns with the ChainBounty community"
+            "✅ Review exposure to flagged counterparties, mixers, and fast-hop routing patterns\n"
+            "✅ Check whether your exchange or platform has updated freeze and reporting procedures\n"
+            "✅ Discuss laundering routes and enforcement signals with the ChainBounty community"
         )
     if incident_type == "pyramid_scam":
         return (
-            "✅ Treat guaranteed returns and referral pressure as red flags\n"
-            "✅ Verify treasury, product, and revenue claims before funding\n"
-            "✅ Bring wallet clusters and recruiter trails to the ChainBounty community"
+            "✅ Treat guaranteed returns, locked withdrawals, and referral pressure as immediate red flags\n"
+            "✅ Verify whether treasury, revenue, and product claims can be independently confirmed\n"
+            "✅ Bring wallet clusters, recruiter trails, and payment rails to the ChainBounty community"
         )
     return (
-        "✅ Verify the source before signing or sending funds\n"
-        "✅ Check wallet approvals and destination addresses\n"
-        "✅ Bring suspicious patterns to the ChainBounty community"
+        "✅ Identify the exact control failure before taking follow-up action\n"
+        "✅ Check whether the same counterparty, wallet path, or exploit condition affects your exposure\n"
+        "✅ Bring concrete indicators and suspicious patterns to the ChainBounty community"
     )
 
 

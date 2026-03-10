@@ -37,9 +37,7 @@
 
 ### 2. Git 상태
 
-- `git rev-parse --is-inside-work-tree`는 실패했다.
-- `git status --short --branch`도 실패했다.
-- 결론: 이 디렉토리는 아직 Git 저장소가 아니다.
+- 현재 디렉토리는 Git 저장소이며 `origin`은 `https://github.com/wani3000/cryptonewsbot.git`로 연결되어 있다.
 
 ### 3. 현재 애플리케이션 구조
 
@@ -159,6 +157,7 @@
   - `CRYPTO_NEWSBOT_LLM_API_KEY`, `CRYPTO_NEWSBOT_LLM_MODEL`이 설정되면 OpenAI-compatible endpoint 호출
   - 미설정 또는 실패 시 규칙 기반 생성으로 fallback
   - Gemini provider도 지원하며 `generateContent` 호출 결과를 JSON으로 파싱
+  - 최신 ChainBounty 작성 가이드 기준으로 모호한 분석 문구를 금지하고, 더 큰 맥락과 직접 대응책을 요구
 - 운영 피드 관리
   - `CRYPTO_NEWSBOT_FEED_URLS`가 비어 있으면 `config/feeds/crypto_sources.json` 사용
 - 피드 모니터링
@@ -249,3 +248,4 @@
 - `launchd` 실실행이 `Documents` 폴더 접근 제한으로 막히는 운영 제약을 확인했음을 기록
 - 최근 실제 전송된 기사만 `repeat suppression` 윈도우 동안 다시 보내지 않도록 `delivered_articles` 기반 dedupe를 추가했음을 기록
 - 로컬 Mac 상시 운영용으로 `~/bots/cryptonewsbot` 런타임 동기화 스크립트를 추가했음을 기록
+- 최신 ChainBounty 작성 가이드에 맞춰 `ChainBounty analysis`와 `Protection measures`를 더 구체적으로 강화했음을 기록

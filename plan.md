@@ -7,7 +7,7 @@
 ## 현재 전제
 
 - 저장소는 문서 + Python MVP 코드가 존재하는 상태다.
-- Git 저장소가 아직 초기화되지 않았다.
+- Git 저장소는 초기화되어 있으며 GitHub 원격과 연결되어 있다.
 - 기존 코드, API, ORM, 디렉토리 레이어는 없다.
 - 로컬 환경에서는 `Python 3.9.6` 사용 가능, `pytest`와 `uv`는 기본 제공되지 않는다.
 - 따라서 이번 계획은 "초기 아키텍처 설계 + 표준 라이브러리 중심 MVP 구축" 계획이다.
@@ -308,6 +308,16 @@ def run_daily_digest(now: datetime) -> None:
   - LaunchAgent가 개발용 `Documents` 경로 대신 런타임 경로를 실행하도록 전환
 - 이유
   - macOS 보호 폴더 제약 없이 `launchd`가 안정적으로 실행되게 만들기 위함
+
+### Iteration 10
+
+- 상태: ChainBounty 콘텐츠 가이드 반영 완료
+- 변경 사항
+  - 모호한 분석 표현 금지
+  - `ChainBounty analysis`를 더 큰 맥락, 반복 패턴, 예상 변화 중심으로 강화
+  - `Protection measures`를 뉴스 맥락 직접 연결 방식으로 강화
+- 이유
+  - 단순 요약이 아니라 보안 전문가 관점의 실질적 인사이트를 제공해야 하기 때문
 
 ### Iteration 5
 

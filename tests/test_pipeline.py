@@ -16,16 +16,16 @@ RSS_FIXTURE = textwrap.dedent(
       <channel>
         <title>Crypto Feed</title>
         <item>
-          <title>Bitcoin ETF flows keep rising</title>
-          <link>https://example.com/articles/bitcoin-etf?utm_source=test</link>
-          <description>Institutional bitcoin ETF demand continued through the session.</description>
-          <pubDate>Mon, 09 Mar 2026 01:00:00 GMT</pubDate>
+          <title>Wallet drainer exploits phishing page and steals user funds</title>
+          <link>https://example.com/articles/wallet-drainer?utm_source=test</link>
+          <description>Attackers used a phishing page to drain wallets after malicious approvals.</description>
+          <pubDate>Wed, 11 Mar 2026 01:00:00 GMT</pubDate>
         </item>
         <item>
           <title>Sports headline</title>
           <link>https://example.com/articles/sports</link>
           <description>This item should be filtered out by crypto focus topics.</description>
-          <pubDate>Mon, 09 Mar 2026 02:00:00 GMT</pubDate>
+          <pubDate>Wed, 11 Mar 2026 02:00:00 GMT</pubDate>
         </item>
       </channel>
     </rss>
@@ -47,7 +47,7 @@ class PipelineTests(unittest.TestCase):
                       "display_name": "Analyst",
                       "tone": "concise",
                       "audience": "operators",
-                      "focus_topics": ["bitcoin", "etf"],
+                      "focus_topics": ["drainer", "phishing"],
                       "forbidden_phrases": [],
                       "signature": "Tracked",
                       "hashtags": ["#btc"],
@@ -73,7 +73,7 @@ class PipelineTests(unittest.TestCase):
             output = run_daily_digest(config)
 
             self.assertEqual(len(output.run_result.articles), 1)
-            self.assertIn("Bitcoin ETF flows keep rising", output.digest_text)
+            self.assertIn("Wallet drainer exploits phishing page", output.digest_text)
             self.assertFalse(output.run_result.telegram_delivered)
             self.assertEqual(len(output.run_result.feed_results), 1)
             self.assertEqual(output.run_result.feed_results[0].status, "ok")
@@ -97,7 +97,7 @@ class PipelineTests(unittest.TestCase):
                       "output_language": "en",
                       "writing_guidelines": ["Keep it factual"],
                       "preferred_cta": "Verify before acting.",
-                      "focus_topics": ["bitcoin", "etf"],
+                      "focus_topics": ["drainer", "phishing"],
                       "forbidden_phrases": [],
                       "signature": "Tracked",
                       "hashtags": ["#btc"],
@@ -142,7 +142,7 @@ class PipelineTests(unittest.TestCase):
                       "output_language": "en",
                       "writing_guidelines": ["Keep it factual"],
                       "preferred_cta": "Verify before acting.",
-                      "focus_topics": ["bitcoin", "etf"],
+                      "focus_topics": ["drainer", "phishing"],
                       "forbidden_phrases": [],
                       "signature": "Tracked",
                       "hashtags": ["#btc"],
