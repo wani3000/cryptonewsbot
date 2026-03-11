@@ -158,6 +158,7 @@
   - 미설정 또는 실패 시 규칙 기반 생성으로 fallback
   - Gemini provider도 지원하며 `generateContent` 호출 결과를 JSON으로 파싱
   - 최신 ChainBounty 작성 가이드 기준으로 모호한 분석 문구를 금지하고, 더 큰 맥락과 직접 대응책을 요구
+  - 최신 포맷팅 가이드 기준으로 무볼드 헤드라인, 공백 라인, 섹션 헤더, 체크리스트 형식을 강제
 - 운영 피드 관리
   - `CRYPTO_NEWSBOT_FEED_URLS`가 비어 있으면 `config/feeds/crypto_sources.json` 사용
 - 피드 모니터링
@@ -249,3 +250,4 @@
 - 최근 실제 전송된 기사만 `repeat suppression` 윈도우 동안 다시 보내지 않도록 `delivered_articles` 기반 dedupe를 추가했음을 기록
 - 로컬 Mac 상시 운영용으로 `~/bots/cryptonewsbot` 런타임 동기화 스크립트를 추가했음을 기록
 - 최신 ChainBounty 작성 가이드에 맞춰 `ChainBounty analysis`와 `Protection measures`를 더 구체적으로 강화했음을 기록
+- 텔레그램 본문은 생성 단계에서 자르지 않고, 전송 계층에서만 4096자 기준으로 분할하도록 유지했음을 기록

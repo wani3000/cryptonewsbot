@@ -38,6 +38,7 @@ class PostGenerationTests(unittest.TestCase):
         self.assertNotIn("momentum", posts[0].body.lower())
         self.assertTrue(posts[0].body.startswith("📉") or posts[0].body.startswith("📊"))
         self.assertIn("Source:", posts[0].body)
+        self.assertNotIn("**", posts[0].body)
 
     def test_generate_posts_uses_llm_when_configured(self) -> None:
         summary = ArticleSummary(
@@ -119,6 +120,9 @@ class PostGenerationTests(unittest.TestCase):
 
         self.assertIn("Revoke high-risk approvals", posts[0].body)
         self.assertNotIn("worth tracking", posts[0].body.lower())
+        self.assertIn("\n\nWhat happened:\n", posts[0].body)
+        self.assertIn("\n\nChainBounty analysis:\n", posts[0].body)
+        self.assertIn("\n\nProtection measures:\n", posts[0].body)
 
     def test_generate_posts_uses_specific_chainbounty_analysis_language(self) -> None:
         summary = ArticleSummary(
@@ -152,6 +156,7 @@ class PostGenerationTests(unittest.TestCase):
         self.assertIn("Bridge incidents rarely stay isolated.", posts[0].body)
         self.assertIn("Reduce exposure to the affected bridge or route", posts[0].body)
         self.assertNotIn("worth tracking", posts[0].body.lower())
+        self.assertGreaterEqual(posts[0].body.count("\n\n"), 4)
 
     def test_split_x_thread_splits_long_body_into_thread_sized_chunks(self) -> None:
         body = "Paragraph one with enough text to exceed the limit.\n\n" * 8

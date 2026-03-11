@@ -42,44 +42,49 @@ def build_post_body(summary: ArticleSummary, style_profile: StyleProfile) -> str
     emoji = select_opening_emoji(summary)
     if summary.template_type == "statistical":
         text = (
-            f"{emoji} **{trim(summary.title, 90)}**\n\n"
+            f"{emoji} {trim(summary.title, 90)}\n\n"
             f"{summary.key_point}\n\n"
-            f"**Key figures:**\n"
-            f"• {trim(summary.why_it_matters, 120)}\n\n"
-            f"**ChainBounty view:**\n"
-            f"Track whether the same attack pattern, laundering route, or victim profile appears again.\n\n"
+            f"Key points:\n"
+            f"{trim(summary.why_it_matters, 220)}\n\n"
+            f"ChainBounty analysis:\n"
+            f"{build_statistical_analysis(summary)}\n\n"
+            f"If you're affected:\n"
+            f"{build_statistical_actions()}\n\n"
             f"Source: {summary.canonical_url}"
         )
     elif summary.template_type == "discussion":
         text = (
-            f"{emoji} **{trim(summary.title, 90)}**\n\n"
+            f"{emoji} {trim(summary.title, 90)}\n\n"
             f"{summary.key_point}\n\n"
-            f"**But here's the issue:**\n"
+            f"What happened:\n"
             f"{summary.why_it_matters}\n\n"
-            f"**ChainBounty view:**\n"
-            f"If you have seen linked wallets, reuse patterns, or laundering paths, bring them into the community discussion.\n\n"
+            f"ChainBounty analysis:\n"
+            f"{build_discussion_analysis(summary)}\n\n"
+            f"We want to hear from the community:\n"
+            f"✅ Share linked wallets, routes, or counterparties\n"
+            f"✅ Flag repeat tactics or reused infrastructure\n"
+            f"✅ Add context from local communities or exchanges\n\n"
             f"Source: {summary.canonical_url}"
         )
     else:
         text = (
-            f"{emoji} **{trim(summary.title, 90)}**\n\n"
+            f"{emoji} {trim(summary.title, 90)}\n\n"
             f"{summary.key_point}\n\n"
-            f"**What happened:**\n"
-            f"• {trim(summary.key_point, 90)}\n"
-            f"• {trim(summary.why_it_matters, 90)}\n\n"
-            f"**ChainBounty view:**\n"
+            f"What happened:\n"
+            f"{build_what_happened(summary)}\n\n"
+            f"ChainBounty analysis:\n"
             f"{build_incident_analysis(summary.incident_type)}\n\n"
-            f"**Protection measures:**\n"
+            f"{build_secondary_section_label(summary.incident_type)}\n"
+            f"{build_secondary_section(summary.incident_type)}\n\n"
+            f"Protection measures:\n"
             f"{build_protection_measures(summary.incident_type)}\n\n"
             f"Source: {summary.canonical_url}"
         )
 
     if style_profile.preferred_cta:
-        text = f"{text}\n{style_profile.preferred_cta}"
-    if style_profile.signature:
-        text = f"{text}\n{style_profile.signature}"
+        text = f"{text}\n{normalize_cta(style_profile.preferred_cta)}"
     if style_profile.hashtags:
-        text = f"{text}\n{' '.join(style_profile.hashtags)}"
+        text = f"{text}\n\n{' '.join(style_profile.hashtags)}"
     for phrase in style_profile.forbidden_phrases:
         text = text.replace(phrase, "").strip()
     return text
@@ -110,6 +115,9 @@ def build_system_prompt(style_profile: StyleProfile) -> str:
         "Avoid unsupported claims and keep facts grounded in the provided summary.\n"
         "Use active voice. Keep sentences short. Put the most important fact first.\n"
         "Be professional, factual, educational. Do not sound sensational, hyped, or emotional.\n"
+        "Do not use markdown bold in the final output.\n"
+        "Leave a blank line after the headline and between each section.\n"
+        "Use section headers with a colon.\n"
         "Prefer security reporting language such as losses, hack, scam, wallet, MEV bot, exploit.\n"
         "Write only about crypto security incidents, scams, fraud, wallet drains, laundering, seizures, or investigations.\n"
         "Do not turn generic market news into a ChainBounty post unless the story clearly has a security, scam, or investigation angle.\n"
@@ -145,7 +153,8 @@ def build_user_prompt(summary: ArticleSummary, style_profile: StyleProfile) -> s
         "Create a publication-ready X post and a richer Telegram post for ChainBounty.\n"
         "The ChainBounty analysis must be specific, contextual, and useful.\n"
         "Interpret the broader implication, likely next change, repeat pattern, or investigative signal.\n"
-        "The response or protection section must be directly tied to this story."
+        "The response or protection section must be directly tied to this story.\n"
+        "Use clear sections, blank lines, and emoji. Do not output one giant paragraph."
     )
 
 
@@ -255,9 +264,71 @@ def build_protection_measures(incident_type: str) -> str:
 
 
 def fit_telegram_body(body: str, limit: int) -> str:
-    if len(body) <= limit:
-        return body
-    return trim(body, limit)
+    return body
+
+
+def build_what_happened(summary: ArticleSummary) -> str:
+    return f"{summary.key_point}\n{summary.why_it_matters}"
+
+
+def build_secondary_section_label(incident_type: str) -> str:
+    if incident_type == "pyramid_scam":
+        return "Red flags:"
+    if incident_type in {"bridge_hack", "general"}:
+        return "Root cause:"
+    return "Key issue:"
+
+
+def build_secondary_section(incident_type: str) -> str:
+    if incident_type == "drainer":
+        return (
+            "Attackers relied on a wallet approval path that can be repeated across cloned lure pages and reused drainer infrastructure."
+        )
+    if incident_type == "phishing":
+        return (
+            "The weak point was trust, not code. Attackers used spoofed branding, urgency, or fake support to push approvals before verification."
+        )
+    if incident_type == "bridge_hack":
+        return (
+            "The failure likely sits in bridge verification, validator trust, or cross-chain custody design. These flaws can cascade once attackers gain one routing advantage."
+        )
+    if incident_type == "sanction_seizure":
+        return (
+            "The real issue is where enforcement is finally able to interrupt laundering flows. That creates new compliance pressure on exchanges and counterparties."
+        )
+    if incident_type == "pyramid_scam":
+        return (
+            "The business model depends on social pressure, fake returns, and recruiter incentives. Once inflows slow, the structure usually fails fast."
+        )
+    return "The key control failure is identifying which wallet path, approval flow, or platform weakness allowed the incident to scale."
+
+
+def build_statistical_analysis(summary: ArticleSummary) -> str:
+    return (
+        "The data matters only if it changes how we read attacker behavior. ChainBounty should compare the move in losses, victim count, or enforcement activity against prior months to see whether defenses improved or attackers simply changed tactics."
+    )
+
+
+def build_statistical_actions() -> str:
+    return (
+        "✅ Compare the current figure against the prior reporting period\n"
+        "✅ Identify which attack category drove the change\n"
+        "✅ Share standout wallet clusters or sectors with the ChainBounty community"
+    )
+
+
+def build_discussion_analysis(summary: ArticleSummary) -> str:
+    return (
+        "The key value here is collective intelligence. If the public facts are incomplete, the next useful signal is usually a linked wallet, reused domain, laundering route, or prior incident pattern that the community can surface faster than a static report."
+    )
+
+
+def normalize_cta(cta: str) -> str:
+    if "👉" in cta:
+        return cta
+    if "http" in cta:
+        return cta.replace("https://community.chainbounty.io/", "👉 https://community.chainbounty.io/")
+    return cta
 
 
 def split_x_thread(body: str, limit: int = 280) -> List[str]:

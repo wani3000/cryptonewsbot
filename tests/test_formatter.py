@@ -20,8 +20,8 @@ class FormatterTests(unittest.TestCase):
         post = GeneratedPost(
             article_id="a1",
             headline="Headline",
-            body="🚨 **Headline**\n\nBody",
-            telegram_body="🚨 **Headline**\n\nLonger telegram body",
+            body="🚨 Headline\n\nBody",
+            telegram_body="🚨 Headline\n\nWhat happened:\nLonger telegram body",
         )
         feed_result = FeedFetchResult(url="https://example.com/feed", source_name="Feed", status="ok", item_count=1)
 

@@ -5,6 +5,8 @@
   "output_language": "en",
   "writing_guidelines": [
     "Start with one emoji and a short headline built around the main fact or number",
+    "Do not use bold formatting in generated posts",
+    "Leave a blank line after the headline and between every major section",
     "Use active voice and keep one idea per sentence",
     "Do not use hype, fear language, or speculation",
     "Put the fact first and the implication second",
@@ -18,6 +20,8 @@
     "Protection measures must directly match the news context, platform, region, or attack method",
     "Do not reuse generic wallet safety checklists unless the story is specifically about signing, approvals, or wallet drains",
     "Where possible, mention the system weakness, attacker method, repeat pattern, or likely next step",
+    "Use section headers with a colon, such as What happened:, ChainBounty analysis:, Protection measures:",
+    "Use checkmark or cross emojis for action lists and red flags",
     "Do not use question headlines unless the post is a discussion prompt",
     "Use abbreviated numbers in headlines and natural number phrasing in the body",
     "Always end with a community invitation and the ChainBounty community link when space allows",
