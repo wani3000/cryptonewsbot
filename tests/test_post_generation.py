@@ -81,13 +81,46 @@ class PostGenerationTests(unittest.TestCase):
 
         with patch(
             "cryptonewsbot.application.post_generation.try_rewrite_post",
-            return_value={"headline": "LLM headline", "body": "LLM body", "telegram_body": "LLM telegram body"},
+            return_value={
+                "headline": "LLM headline",
+                "body": (
+                    "📉 LLM headline\n\n"
+                    "Institutional demand increased.\n\n"
+                    "Key points:\n"
+                    "ETF flows changed again.\n\n"
+                    "ChainBounty analysis:\n"
+                    "This may signal a change in institutional behavior.\n\n"
+                    "If you're affected:\n"
+                    "✅ Review exposure\n"
+                    "✅ Track follow-on flows\n"
+                    "✅ Share signals with the community\n\n"
+                    "Source: https://example.com/article-1\n"
+                    "Join the discussion: 👉 https://community.chainbounty.io/\n\n"
+                    "#ChainBounty #btc"
+                ),
+                "telegram_body": (
+                    "📉 LLM headline\n\n"
+                    "Institutional demand increased.\n\n"
+                    "Key points:\n"
+                    "ETF flows changed again.\n\n"
+                    "ChainBounty analysis:\n"
+                    "This may signal a change in institutional behavior.\n\n"
+                    "If you're affected:\n"
+                    "✅ Review exposure\n"
+                    "✅ Track follow-on flows\n"
+                    "✅ Share signals with the community\n\n"
+                    "Source: https://example.com/article-1\n"
+                    "Join the discussion: 👉 https://community.chainbounty.io/\n\n"
+                    "#ChainBounty #btc"
+                ),
+            },
         ):
             posts = generate_posts([summary], profile, config)
 
         self.assertEqual(posts[0].headline, "LLM headline")
-        self.assertEqual(posts[0].body, "LLM body")
-        self.assertEqual(posts[0].telegram_body, "LLM telegram body")
+        self.assertIn("ChainBounty analysis:", posts[0].body)
+        self.assertIn("#ChainBounty", posts[0].body)
+        self.assertEqual(posts[0].body, posts[0].telegram_body)
 
     def test_generate_posts_uses_incident_specific_protection_measures(self) -> None:
         summary = ArticleSummary(

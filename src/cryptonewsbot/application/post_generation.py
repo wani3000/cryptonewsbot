@@ -16,16 +16,24 @@ def generate_posts(
     posts = []
     for summary in list(summaries)[: style_profile.max_posts]:
         headline = trim(summary.title, 80)
-        body = build_post_body(summary, style_profile)
+        fallback_body = build_post_body(summary, style_profile)
+        body = fallback_body
         if rewriter and rewriter.enabled:
             rewritten = try_rewrite_post(summary, style_profile, rewriter)
             if rewritten is not None:
                 headline = trim(rewritten["headline"] or headline, 80)
-                body = rewritten["body"] or body
-                telegram_body = rewritten.get("telegram_body") or body
+                body = finalize_post_text(rewritten["body"] or body, summary, style_profile, fallback_body)
+                telegram_body = finalize_post_text(
+                    rewritten.get("telegram_body") or body,
+                    summary,
+                    style_profile,
+                    fallback_body,
+                )
             else:
+                body = finalize_post_text(body, summary, style_profile, fallback_body)
                 telegram_body = body
         else:
+            body = finalize_post_text(body, summary, style_profile, fallback_body)
             telegram_body = body
         posts.append(
             GeneratedPost(
@@ -40,53 +48,122 @@ def generate_posts(
 
 def build_post_body(summary: ArticleSummary, style_profile: StyleProfile) -> str:
     emoji = select_opening_emoji(summary)
-    if summary.template_type == "statistical":
-        text = (
-            f"{emoji} {trim(summary.title, 90)}\n\n"
-            f"{summary.key_point}\n\n"
-            f"Key points:\n"
-            f"{trim(summary.why_it_matters, 220)}\n\n"
-            f"ChainBounty analysis:\n"
-            f"{build_statistical_analysis(summary)}\n\n"
-            f"If you're affected:\n"
-            f"{build_statistical_actions()}\n\n"
-            f"Source: {summary.canonical_url}"
-        )
+    if summary.incident_type == "sanction_seizure":
+        text = build_policy_post(summary, emoji)
+    elif summary.incident_type == "bridge_hack":
+        text = build_protocol_post(summary, emoji)
+    elif summary.incident_type in {"pyramid_scam", "phishing"}:
+        text = build_scam_post(summary, emoji)
+    elif summary.template_type == "statistical":
+        text = build_statistical_post(summary, emoji)
     elif summary.template_type == "discussion":
-        text = (
-            f"{emoji} {trim(summary.title, 90)}\n\n"
-            f"{summary.key_point}\n\n"
-            f"What happened:\n"
-            f"{summary.why_it_matters}\n\n"
-            f"ChainBounty analysis:\n"
-            f"{build_discussion_analysis(summary)}\n\n"
-            f"We want to hear from the community:\n"
-            f"✅ Share linked wallets, routes, or counterparties\n"
-            f"✅ Flag repeat tactics or reused infrastructure\n"
-            f"✅ Add context from local communities or exchanges\n\n"
-            f"Source: {summary.canonical_url}"
-        )
+        text = build_discussion_post(summary, emoji)
     else:
-        text = (
-            f"{emoji} {trim(summary.title, 90)}\n\n"
-            f"{summary.key_point}\n\n"
-            f"What happened:\n"
-            f"{build_what_happened(summary)}\n\n"
-            f"ChainBounty analysis:\n"
-            f"{build_incident_analysis(summary.incident_type)}\n\n"
-            f"{build_secondary_section_label(summary.incident_type)}\n"
-            f"{build_secondary_section(summary.incident_type)}\n\n"
-            f"Protection measures:\n"
-            f"{build_protection_measures(summary.incident_type)}\n\n"
-            f"Source: {summary.canonical_url}"
-        )
+        text = build_incident_post(summary, emoji)
 
+    text = finalize_closing(text, style_profile)
+    for phrase in style_profile.forbidden_phrases:
+        text = text.replace(phrase, "").strip()
+    return text
+
+
+def build_statistical_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"Key points:\n"
+        f"{trim(summary.why_it_matters, 220)}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_statistical_analysis(summary)}\n\n"
+        f"If you're affected:\n"
+        f"{build_statistical_actions()}\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def build_discussion_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"What happened:\n"
+        f"{summary.why_it_matters}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_discussion_analysis(summary)}\n\n"
+        f"We want to hear from the community:\n"
+        f"✅ Share linked wallets, routes, or counterparties\n"
+        f"✅ Flag repeat tactics or reused infrastructure\n"
+        f"✅ Add context from local communities or exchanges\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def build_incident_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"What happened:\n"
+        f"{build_what_happened(summary)}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_incident_analysis(summary.incident_type)}\n\n"
+        f"{build_secondary_section_label(summary.incident_type)}\n"
+        f"{build_secondary_section(summary.incident_type)}\n\n"
+        f"Protection measures:\n"
+        f"{build_protection_measures(summary.incident_type)}\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def build_policy_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"Key points:\n"
+        f"{build_what_happened(summary)}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_incident_analysis(summary.incident_type)}\n\n"
+        f"If you're affected:\n"
+        f"{build_protection_measures(summary.incident_type)}\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def build_protocol_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"What happened:\n"
+        f"{build_what_happened(summary)}\n\n"
+        f"Root cause:\n"
+        f"{build_secondary_section(summary.incident_type)}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_incident_analysis(summary.incident_type)}\n\n"
+        f"DeFi users:\n"
+        f"{build_protection_measures(summary.incident_type)}\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def build_scam_post(summary: ArticleSummary, emoji: str) -> str:
+    return (
+        f"{emoji} {trim(summary.title, 90)}\n\n"
+        f"{summary.key_point}\n\n"
+        f"How it works:\n"
+        f"{build_what_happened(summary)}\n\n"
+        f"Red flags:\n"
+        f"{build_red_flags(summary.incident_type)}\n\n"
+        f"ChainBounty analysis:\n"
+        f"{build_incident_analysis(summary.incident_type)}\n\n"
+        f"Protect yourself:\n"
+        f"{build_protection_measures(summary.incident_type)}\n\n"
+        f"Source: {summary.canonical_url}"
+    )
+
+
+def finalize_closing(text: str, style_profile: StyleProfile) -> str:
     if style_profile.preferred_cta:
         text = f"{text}\n{normalize_cta(style_profile.preferred_cta)}"
     if style_profile.hashtags:
         text = f"{text}\n\n{' '.join(style_profile.hashtags)}"
-    for phrase in style_profile.forbidden_phrases:
-        text = text.replace(phrase, "").strip()
     return text
 
 
@@ -303,6 +380,26 @@ def build_secondary_section(incident_type: str) -> str:
     return "The key control failure is identifying which wallet path, approval flow, or platform weakness allowed the incident to scale."
 
 
+def build_red_flags(incident_type: str) -> str:
+    if incident_type == "phishing":
+        return (
+            "❌ Urgent account or recovery prompts\n"
+            "❌ Lookalike domains or fake support handles\n"
+            "❌ Signature requests with unclear purpose"
+        )
+    if incident_type == "pyramid_scam":
+        return (
+            "❌ Guaranteed returns or fixed yield promises\n"
+            "❌ Referral pressure tied to payouts\n"
+            "❌ Withdrawal delays hidden behind new deposit demands"
+        )
+    return (
+        "❌ Unverified counterparties or sudden urgency\n"
+        "❌ Missing transparency around funds or routing\n"
+        "❌ Pressure to act before independent verification"
+    )
+
+
 def build_statistical_analysis(summary: ArticleSummary) -> str:
     return (
         "The data matters only if it changes how we read attacker behavior. ChainBounty should compare the move in losses, victim count, or enforcement activity against prior months to see whether defenses improved or attackers simply changed tactics."
@@ -329,6 +426,65 @@ def normalize_cta(cta: str) -> str:
     if "http" in cta:
         return cta.replace("https://community.chainbounty.io/", "👉 https://community.chainbounty.io/")
     return cta
+
+
+def finalize_post_text(text: str, summary: ArticleSummary, style_profile: StyleProfile, fallback_text: str) -> str:
+    cleaned = text.replace("**", "").strip()
+    if not validate_format(cleaned):
+        cleaned = fallback_text
+    cleaned = finalize_closing(remove_duplicate_closing(cleaned), style_profile)
+    for phrase in style_profile.forbidden_phrases:
+        cleaned = cleaned.replace(phrase, "").strip()
+    return cleaned
+
+
+def remove_duplicate_closing(text: str) -> str:
+    lines = [line.rstrip() for line in text.strip().splitlines()]
+    kept: List[str] = []
+    seen_source = False
+    seen_cta = False
+    seen_hashtag = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("Source:"):
+            if seen_source:
+                continue
+            seen_source = True
+        if "community.chainbounty.io" in stripped:
+            if seen_cta:
+                continue
+            seen_cta = True
+        if stripped.startswith("#ChainBounty"):
+            if seen_hashtag:
+                continue
+            seen_hashtag = True
+        kept.append(line)
+    return "\n".join(kept).strip()
+
+
+def validate_format(text: str) -> bool:
+    starts_with_emoji = text.startswith(("🚨", "⚠️", "📉", "📊", "🔍", "🇬", "🇺", "🇷"))
+    has_section = any(
+        header in text
+        for header in [
+            "What happened:",
+            "ChainBounty analysis:",
+            "Protection measures:",
+            "Key points:",
+            "If you're affected:",
+            "Root cause:",
+            "How it works:",
+            "Red flags:",
+            "Protect yourself:",
+            "DeFi users:",
+        ]
+    )
+    has_spacing = text.count("\n\n") >= 3
+    has_checkmarks = "✅" in text or "❌" in text
+    has_source = "Source:" in text
+    has_hashtag = "#ChainBounty" in text
+    has_no_bold = "**" not in text
+    return all([starts_with_emoji, has_section, has_spacing, has_checkmarks, has_source, has_hashtag, has_no_bold])
 
 
 def split_x_thread(body: str, limit: int = 280) -> List[str]:
