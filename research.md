@@ -6,7 +6,7 @@
 
 ## 조사 시점
 
-- 날짜: 2026-03-09
+- 날짜: 2026-03-18
 - 작업 디렉토리: `/Users/hanwha/Documents/GitHub/cryptonewsbot`
 
 ## 조사 방법
@@ -14,10 +14,12 @@
 아래 항목을 직접 확인했다.
 
 - 현재 작업 경로 확인
-- 루트 디렉토리 파일 목록 확인
-- 상위 디렉토리 구조 확인
-- Git 저장소 여부 확인
-- 저장소 내 추적 가능한 파일 존재 여부 확인
+- 루트 디렉토리 및 핵심 모듈 목록 확인
+- Git 브랜치 / fetch / merge 상태 확인
+- `origin/main`과 로컬 `main` 동기화 상태 확인
+- `README.md`, `research.md`, `plan.md` 실제 내용 확인
+- `unittest` 전체 실행 결과 확인
+- Jira accessible project / JQL 검색 결과 확인
 
 ## 확인 결과 요약
 
@@ -38,6 +40,16 @@
 ### 2. Git 상태
 
 - 현재 디렉토리는 Git 저장소이며 `origin`은 `https://github.com/wani3000/cryptonewsbot.git`로 연결되어 있다.
+- `git fetch origin` 이후 `git rev-parse HEAD`와 `git rev-parse origin/main`이 동일하게 `96b1bba2a95effeb81d0b1a6f45c57fd6abfb3f5`를 가리킨다.
+- `git pull --ff-only origin main`은 로컬 브랜치 설정 때문에 `Cannot fast-forward to multiple branches`로 실패했지만, `git merge --ff-only origin/main` 결과는 `Already up to date.`였다.
+- 조사 시점 기준 uncommitted 변경사항은 문서/테스트 복구 작업 전에는 없었고, 이후 수정분만 남는다.
+
+### 2-1. Jira 접근 상태
+
+- accessible Jira 프로젝트는 `AP`, `BIB`, `CON`, `IW`, `MAR`, `PT`, `SCRUM` 7개다.
+- `cryptonewsbot`, `ChainBounty`, `Telegram + crypto/news`, `launchd/RSS` 기준 JQL 검색을 직접 실행했지만 현재 accessible 범위에서는 이 저장소와 직접 매핑되는 이슈를 찾지 못했다.
+- 즉, "Jira 이슈 구조가 이미 잡혀 있다"는 사용자 진술과 달리 현재 도구 접근 범위 안에서는 이 저장소 전용 대표/하위 이슈가 아직 확인되지 않는다.
+- 따라서 본 조사 시점에서는 Jira 상태를 임의로 바꾸지 않았고, 문서에 증거 기반으로 이 불일치를 남긴다.
 
 ### 3. 현재 애플리케이션 구조
 
@@ -147,7 +159,8 @@
 - 사용자 기준 기반 재가공
   - 스타일 프로필의 금지 표현, signature, hashtag, audience 반영
 - X 포스트 포맷팅
-  - 길이 제한 기반 trim 처리
+  - headline은 80자 내외로 trim하지만 body는 더 이상 280자 제한으로 자르지 않는다.
+  - 텔레그램용 `telegram_body`는 별도 생성 후 전송 계층에서만 분할한다.
 - 텔레그램 전송
   - dry-run 또는 Bot API `sendMessage`
 - 텔레그램 운영 진단
@@ -175,11 +188,32 @@
 
 현재 외부 배포 상태:
 
-- Git 저장소는 아직 없지만, 로컬 운영 배포는 macOS `launchd` 기준으로 구성 가능하다.
+- Git 저장소는 이미 존재하며 GitHub 원격과 동기화된다.
 - `scripts/install_launchd.sh`는 `~/Library/LaunchAgents/com.chainbounty.cryptonewsbot.daily.plist`를 생성하고 등록한다.
 - 기본 실행 시각은 매일 09:00 로컬 시간이다.
 - 개발 저장소가 `/Users/hanwha/Documents/...` 아래에 있어 `launchd` 직접 실행은 `Operation not permitted`로 실패할 수 있다.
 - 이를 피하기 위해 런타임 경로를 `~/bots/cryptonewsbot`로 분리하고, LaunchAgent는 그 복사본만 실행하도록 조정했다.
+
+### 7. 산출물/실행 결과 기준 현 상태
+
+- 실제 테스트 산출물
+  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
+  - 조사 초반에는 `tests/test_pipeline.py`의 3개 테스트가 실패했다.
+- 원인 후보와 반증
+  1. RSS fixture 날짜가 24시간 창 밖이다.
+     - `tests/test_pipeline.py`의 `pubDate`가 `Wed, 11 Mar 2026`로 하드코딩되어 있었고, 조사일은 `2026-03-18`이다. 이 후보는 유지됐다.
+  2. 보안 relevance filter가 너무 엄격하다.
+     - fixture 기사 제목/본문이 `wallet drainer`, `phishing`, `malicious approvals`를 포함하고 스타일 프로필도 `drainer`, `phishing`을 focus topic으로 갖기 때문에 반증됐다.
+  3. 최근 포맷 강제 로직이 post를 폐기한다.
+     - 실패 시점이 post generation 이전이며 `run_result.articles == 0`이므로 반증됐다.
+- 최종 결론
+  - 실패 원인은 로직 회귀가 아니라 테스트 fixture 날짜의 경직성이다.
+- 조치 결과
+  - `tests/test_pipeline.py`를 수정해 RSS fixture 날짜를 현재 시각 기준 상대값으로 생성하게 변경했다.
+  - 수정 후 `unittest` 전체 `18`건이 통과한다.
+- 런타임 검증 메모
+  - `PYTHONPATH=src python3 -m cryptonewsbot.main run`은 live RSS/LLM/Telegram I/O가 포함된 경로이므로 짧은 검증 윈도우 내 즉시 종료를 보장하지 않는다.
+  - 따라서 현재 세션의 deterministic 검증 기준은 전체 `unittest` 통과다.
 
 ## 구현 대상 기능과 직접 연관된 조사 결과
 
@@ -206,7 +240,8 @@
 - RSS/Atom 외 변형 피드에는 취약할 수 있다.
 - 실제 운영 피드 품질과 기사 본문 길이에 따라 relevance filtering 품질이 달라질 수 있다.
 - 텔레그램 전송 실패 시 현재는 예외 전파 외 추가 재시도 로직이 없다.
-- Git 저장소가 아직 없으므로 협업 이력 관리가 불가능한 상태다.
+- live run 경로는 외부 RSS/LLM/Telegram 응답 시간에 따라 검증 시간이 길어질 수 있다.
+- accessible Jira 범위 안에서 이 저장소 전용 이슈가 확인되지 않아, 코드 상태와 Jira 상태를 완전히 동기화하지 못한 상태다.
 
 ## 권장 후속 조사 항목
 
@@ -219,6 +254,15 @@
 - 외부 스케줄러(cron, GitHub Actions, 서버 cron) 방식
 
 ## 변경 이력
+
+### 2026-03-18
+
+- 재투입 에이전트가 문서, Git, Jira, 테스트 산출물을 기준으로 현재 상태를 재검증했다.
+- `origin/main`과 로컬 `main`이 동일함을 확인했다.
+- accessible Jira에서 `cryptonewsbot` 전용 이슈를 찾지 못한 사실을 기록했다.
+- 파이프라인 테스트 3건 실패 원인을 후보 3개로 나눈 뒤 반증했고, 최종적으로 stale RSS fixture 날짜 문제로 결론 내렸다.
+- `tests/test_pipeline.py`를 현재 시각 기준 동적 fixture 방식으로 수정했고 `unittest` 18건 통과를 재확인했다.
+- stale 문구였던 "Git 저장소는 아직 없지만"을 현재 상태에 맞게 수정했다.
 
 ### 2026-03-09
 

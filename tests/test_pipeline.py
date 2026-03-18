@@ -2,35 +2,42 @@ import os
 import tempfile
 import textwrap
 import unittest
+from datetime import datetime, timedelta, timezone
+from email.utils import format_datetime
 from pathlib import Path
+from typing import Optional
 from unittest.mock import patch
 
 from cryptonewsbot.application.pipeline import run_daily_digest
 from cryptonewsbot.config import AppConfig
 
 
-RSS_FIXTURE = textwrap.dedent(
-    """\
-    <?xml version="1.0" encoding="UTF-8" ?>
-    <rss version="2.0">
-      <channel>
-        <title>Crypto Feed</title>
-        <item>
-          <title>Wallet drainer exploits phishing page and steals user funds</title>
-          <link>https://example.com/articles/wallet-drainer?utm_source=test</link>
-          <description>Attackers used a phishing page to drain wallets after malicious approvals.</description>
-          <pubDate>Wed, 11 Mar 2026 01:00:00 GMT</pubDate>
-        </item>
-        <item>
-          <title>Sports headline</title>
-          <link>https://example.com/articles/sports</link>
-          <description>This item should be filtered out by crypto focus topics.</description>
-          <pubDate>Wed, 11 Mar 2026 02:00:00 GMT</pubDate>
-        </item>
-      </channel>
-    </rss>
-    """
-)
+def _build_rss_fixture(now: Optional[datetime] = None) -> str:
+    current_time = now or datetime.now(timezone.utc)
+    article_time = format_datetime(current_time - timedelta(hours=2), usegmt=True)
+    filtered_time = format_datetime(current_time - timedelta(hours=1), usegmt=True)
+    return textwrap.dedent(
+        f"""\
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <rss version="2.0">
+          <channel>
+            <title>Crypto Feed</title>
+            <item>
+              <title>Wallet drainer exploits phishing page and steals user funds</title>
+              <link>https://example.com/articles/wallet-drainer?utm_source=test</link>
+              <description>Attackers used a phishing page to drain wallets after malicious approvals.</description>
+              <pubDate>{article_time}</pubDate>
+            </item>
+            <item>
+              <title>Sports headline</title>
+              <link>https://example.com/articles/sports</link>
+              <description>This item should be filtered out by crypto focus topics.</description>
+              <pubDate>{filtered_time}</pubDate>
+            </item>
+          </channel>
+        </rss>
+        """
+    )
 
 
 class PipelineTests(unittest.TestCase):
@@ -38,7 +45,7 @@ class PipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             feed_path = root / "feed.xml"
-            feed_path.write_text(RSS_FIXTURE, encoding="utf-8")
+            feed_path.write_text(_build_rss_fixture(), encoding="utf-8")
             style_path = root / "style.json"
             style_path.write_text(
                 textwrap.dedent(
@@ -85,7 +92,7 @@ class PipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             feed_path = root / "feed.xml"
-            feed_path.write_text(RSS_FIXTURE, encoding="utf-8")
+            feed_path.write_text(_build_rss_fixture(), encoding="utf-8")
             style_path = root / "style.json"
             style_path.write_text(
                 textwrap.dedent(
@@ -130,7 +137,7 @@ class PipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             feed_path = root / "feed.xml"
-            feed_path.write_text(RSS_FIXTURE, encoding="utf-8")
+            feed_path.write_text(_build_rss_fixture(), encoding="utf-8")
             style_path = root / "style.json"
             style_path.write_text(
                 textwrap.dedent(

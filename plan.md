@@ -8,9 +8,9 @@
 
 - 저장소는 문서 + Python MVP 코드가 존재하는 상태다.
 - Git 저장소는 초기화되어 있으며 GitHub 원격과 연결되어 있다.
-- 기존 코드, API, ORM, 디렉토리 레이어는 없다.
+- 기존 코드, CLI 엔트리포인트, SQLite 스키마, 텔레그램/LLM/RSS 어댑터가 이미 존재한다.
 - 로컬 환경에서는 `Python 3.9.6` 사용 가능, `pytest`와 `uv`는 기본 제공되지 않는다.
-- 따라서 이번 계획은 "초기 아키텍처 설계 + 표준 라이브러리 중심 MVP 구축" 계획이다.
+- 현재 시점의 계획은 "기존 MVP 유지보수 + 문서/Jira/테스트 상태 동기화 + 비UI 운영 안정화"다.
 
 ## 문제 해결 전략
 
@@ -430,6 +430,38 @@ def run_daily_digest(now: datetime) -> None:
 - 이유
   - 사용자가 X는 스레드 분할로 올리면 된다고 요청했기 때문
 
+### Iteration 15
+
+- 상태: 2026-03-18 재투입 점검 완료
+- 확인 사항
+  - `README.md`, `research.md`, `plan.md`가 현재 Git/Jira/테스트 상태를 일부 반영하지 못하고 있었다.
+  - 로컬 `main`과 `origin/main`은 동일하다.
+  - accessible Jira 범위에서는 `cryptonewsbot` 또는 `ChainBounty` 전용 대표/하위 이슈 구조를 찾지 못했다.
+  - UI 승인 대기 중으로 확인된 이슈는 없다.
+- 인계 메모
+  - 다음 비UI 하위 태스크는 실제 실패 중인 테스트 복구와 문서 최신화였다.
+  - Jira 매핑은 추가 근거가 나오기 전까지 임의 생성/수정하지 않는다.
+
+### Iteration 16
+
+- 상태: 테스트 안정화 완료
+- 문제
+  - `tests/test_pipeline.py`의 RSS fixture가 `2026-03-11` 하드코딩 날짜를 사용해 조사 시점 기준 24시간 창 밖으로 밀려났다.
+- 후보 및 반증
+  1. fixture 날짜 stale
+     - 유지
+  2. 보안 relevance filter 과도 강화
+     - fixture 키워드와 스타일 프로필 focus topic 기준 반증
+  3. 포맷 검증 로직이 post를 폐기
+     - `run_result.articles == 0` 단계에서 실패하므로 반증
+- 최종 전략
+  - fixture 날짜를 현재 시점 기준 상대값으로 생성하도록 수정해 테스트를 시간 경과에 강한 형태로 바꾼다.
+- 실제 변경
+  - `tests/test_pipeline.py`에 `_build_rss_fixture()` 헬퍼를 추가하고 pubDate를 동적으로 생성하도록 수정
+- 검증
+  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
+  - 결과: `18` tests, `OK`
+
 향후 피드백이 들어오면 이 섹션 아래에 Iteration 2, 3 형태로 누적 기록한다.
 
 ## Todo List
@@ -462,7 +494,9 @@ def run_daily_digest(now: datetime) -> None:
 - [x] `Codex` 공격 유형별(드레이너, 피싱, 브리지 해킹, 제재/압수, 피라미드 스캠) 세부 템플릿 분화
 - [x] `Codex` subtype별 LLM 출력 품질과 길이 제어 1차 튜닝
 - [x] `Codex` X 글자 제한 제거 및 thread-splitting 준비
+- [x] `Codex` 시간 경과에도 깨지지 않도록 파이프라인 테스트 RSS fixture를 동적 날짜 방식으로 안정화
 - [ ] `Codex` subtype별 LLM 문체 차이와 분석 깊이 추가 튜닝
+- [ ] `Codex` accessible Jira 범위에서 이 저장소 전용 대표/하위 이슈 구조를 추가 확인하거나, 확인 불가 상태를 운영 규칙에 맞게 정리
 - [ ] `Codex` 운영 배포 방식 확정
 
 ## 변경 이력
