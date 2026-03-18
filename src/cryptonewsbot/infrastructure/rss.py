@@ -24,6 +24,16 @@ DATE_TAGS = [
 ]
 TITLE_TAGS = ["title", "{http://www.w3.org/2005/Atom}title"]
 TAG_RE = re.compile(r"<[^>]+>")
+COLLECTION_SECURITY_KEYWORDS = [
+    "exploit",
+    "hack",
+    "scam",
+    "phishing",
+    "drain",
+    "vulnerability",
+    "breach",
+    "compromise",
+]
 
 
 class RSSCollectionResult:
@@ -80,17 +90,18 @@ class RSSCollector:
             published_at = parse_pub_date(_find_first_text(item_node, DATE_TAGS))
             if published_at < since:
                 continue
-            items.append(
-                {
-                    "source_name": feed_title,
-                    "source_url": feed_url,
-                    "title": _find_first_text(item_node, TITLE_TAGS),
-                    "url": _find_rss_link(item_node),
-                    "summary": _find_first_text(item_node, CONTENT_TAGS),
-                    "content": _find_first_text(item_node, CONTENT_TAGS),
-                    "published_at": published_at,
-                }
-            )
+            item = {
+                "source_name": feed_title,
+                "source_url": feed_url,
+                "title": _find_first_text(item_node, TITLE_TAGS),
+                "url": _find_rss_link(item_node),
+                "summary": _find_first_text(item_node, CONTENT_TAGS),
+                "content": _find_first_text(item_node, CONTENT_TAGS),
+                "published_at": published_at,
+            }
+            if not _has_collection_security_keyword(item):
+                continue
+            items.append(item)
         return items, feed_title
 
     def _collect_atom_feed(
@@ -102,17 +113,18 @@ class RSSCollector:
             published_at = parse_pub_date(_find_first_text(entry, DATE_TAGS))
             if published_at < since:
                 continue
-            items.append(
-                {
-                    "source_name": feed_title,
-                    "source_url": feed_url,
-                    "title": _find_first_text(entry, TITLE_TAGS),
-                    "url": _find_atom_link(entry),
-                    "summary": _find_first_text(entry, CONTENT_TAGS),
-                    "content": _find_first_text(entry, CONTENT_TAGS),
-                    "published_at": published_at,
-                }
-            )
+            item = {
+                "source_name": feed_title,
+                "source_url": feed_url,
+                "title": _find_first_text(entry, TITLE_TAGS),
+                "url": _find_atom_link(entry),
+                "summary": _find_first_text(entry, CONTENT_TAGS),
+                "content": _find_first_text(entry, CONTENT_TAGS),
+                "published_at": published_at,
+            }
+            if not _has_collection_security_keyword(item):
+                continue
+            items.append(item)
         return items, feed_title
 
 
@@ -161,3 +173,10 @@ def _strip_namespace(tag: str) -> str:
     if "}" in tag:
         return tag.split("}", 1)[1]
     return tag
+
+
+def _has_collection_security_keyword(item: Dict[str, object]) -> bool:
+    haystack = " ".join(
+        str(item.get(field, "")) for field in ("title", "summary", "content")
+    ).lower()
+    return any(keyword in haystack for keyword in COLLECTION_SECURITY_KEYWORDS)

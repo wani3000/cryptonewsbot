@@ -462,6 +462,20 @@ def run_daily_digest(now: datetime) -> None:
   - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
   - 결과: `18` tests, `OK`
 
+### Iteration 17
+
+- 상태: 수집 단계 보안 키워드 필터 강화 완료
+- 문제
+  - 기존에는 RSS/Atom 수집 후 relevance filtering 단계에서만 보안 기사 선별이 이뤄져 일반 시장 뉴스도 일단 파이프라인에 들어왔다.
+- 전략
+  - 수집 단계에서 `exploit`, `hack`, `scam`, `phishing`, `drain`, `vulnerability`, `breach`, `compromise`가 title/summary/content에 없는 기사는 조기 제외한다.
+- 실제 변경
+  - `src/cryptonewsbot/infrastructure/rss.py`에 collection-stage keyword gate 추가
+  - `tests/test_rss.py`에 비보안 Atom entry 조기 제외 테스트 추가
+- 검증
+  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
+  - 결과: `19` tests, `OK`
+
 향후 피드백이 들어오면 이 섹션 아래에 Iteration 2, 3 형태로 누적 기록한다.
 
 ## Todo List
@@ -495,6 +509,7 @@ def run_daily_digest(now: datetime) -> None:
 - [x] `Codex` subtype별 LLM 출력 품질과 길이 제어 1차 튜닝
 - [x] `Codex` X 글자 제한 제거 및 thread-splitting 준비
 - [x] `Codex` 시간 경과에도 깨지지 않도록 파이프라인 테스트 RSS fixture를 동적 날짜 방식으로 안정화
+- [x] `Codex` 수집 단계에서 지정 보안 키워드가 없는 뉴스를 조기 제외하도록 RSS 필터 강화
 - [ ] `Codex` subtype별 LLM 문체 차이와 분석 깊이 추가 튜닝
 - [ ] `Codex` accessible Jira 범위에서 이 저장소 전용 대표/하위 이슈 구조를 추가 확인하거나, 확인 불가 상태를 운영 규칙에 맞게 정리
 - [ ] `Codex` 운영 배포 방식 확정

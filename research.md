@@ -140,6 +140,7 @@
 
 - 뉴스 수집
   - RSS 2.0 `channel/item`과 Atom `feed/entry` 구조 파싱
+  - 수집 단계에서 `exploit`, `hack`, `scam`, `phishing`, `drain`, `vulnerability`, `breach`, `compromise` 키워드가 없는 기사는 조기 제외
 - 수집 소스 정규화
   - URL의 `utm_*`, `fbclid`, `gclid` 제거
   - 공백 정리
@@ -263,6 +264,7 @@
 - 파이프라인 테스트 3건 실패 원인을 후보 3개로 나눈 뒤 반증했고, 최종적으로 stale RSS fixture 날짜 문제로 결론 내렸다.
 - `tests/test_pipeline.py`를 현재 시각 기준 동적 fixture 방식으로 수정했고 `unittest` 18건 통과를 재확인했다.
 - stale 문구였던 "Git 저장소는 아직 없지만"을 현재 상태에 맞게 수정했다.
+- RSS 수집기 단계에서 보안 키워드 조기 필터를 추가해 일반 시장/업그레이드 뉴스가 후속 파이프라인으로 들어오지 않도록 강화했다.
 
 ### 2026-03-09
 
