@@ -4,19 +4,145 @@
       "name": "CoinDesk",
       "url": "https://www.coindesk.com/arc/outboundfeeds/rss",
       "enabled": true,
+      "region": "US",
+      "category": "media",
+      "tier": "core",
       "notes": "Official CoinDesk RSS feed."
     },
     {
       "name": "Cointelegraph",
       "url": "https://cointelegraph.com/rss",
       "enabled": true,
+      "region": "Global",
+      "category": "media",
+      "tier": "core",
       "notes": "Official Cointelegraph all-news RSS feed."
     },
     {
       "name": "Decrypt",
       "url": "https://decrypt.co/feed",
       "enabled": true,
+      "region": "US",
+      "category": "media",
+      "tier": "core",
       "notes": "Official Decrypt RSS feed."
+    },
+    {
+      "name": "Cointelegraph Korea",
+      "url": "https://kr.cointelegraph.com/rss",
+      "enabled": true,
+      "region": "KR",
+      "category": "media",
+      "tier": "extended",
+      "notes": "Official Cointelegraph Korea RSS feed."
+    },
+    {
+      "name": "Cointelegraph Japan",
+      "url": "https://jp.cointelegraph.com/rss",
+      "enabled": true,
+      "region": "JP",
+      "category": "media",
+      "tier": "extended",
+      "notes": "Official Cointelegraph Japan RSS feed."
+    },
+    {
+      "name": "SEC Press Releases",
+      "url": "https://www.sec.gov/news/pressreleases.rss",
+      "enabled": true,
+      "region": "US",
+      "category": "regulator",
+      "tier": "core",
+      "notes": "Official SEC press release feed. Crypto-relevant items are filtered downstream."
+    },
+    {
+      "name": "FCA News",
+      "url": "https://www.fca.org.uk/news/rss.xml",
+      "enabled": true,
+      "region": "EU",
+      "category": "regulator",
+      "tier": "core",
+      "notes": "Official FCA news feed for UK and Europe-adjacent regulatory coverage."
+    },
+    {
+      "name": "Japan FSA News",
+      "url": "https://www.fsa.go.jp/fsaNewsListAll_rss2.xml",
+      "enabled": true,
+      "region": "JP",
+      "category": "regulator",
+      "tier": "core",
+      "notes": "Official Japan Financial Services Agency all-news RSS feed."
+    },
+    {
+      "name": "Ontario Securities Commission Investor Alerts",
+      "url": "https://feeds.feedburner.com/rss_osc_investor_alerts_en",
+      "enabled": true,
+      "region": "CA",
+      "category": "regulator",
+      "tier": "core",
+      "notes": "Official Ontario Securities Commission investor alert feed."
+    },
+    {
+      "name": "HKMA Press Releases",
+      "url": "https://www.hkma.gov.hk/eng/other-information/rss/rss_press-release.xml",
+      "enabled": true,
+      "region": "CN",
+      "category": "regulator",
+      "tier": "core",
+      "notes": "Official Hong Kong Monetary Authority press release feed for Greater China coverage."
+    },
+    {
+      "name": "Google News US Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28crypto%20OR%20bitcoin%20OR%20ethereum%29%20%28hack%20OR%20scam%20OR%20fraud%20OR%20phishing%20OR%20exploit%20OR%20sanction%29&hl=en-US&gl=US&ceid=US:en",
+      "enabled": true,
+      "region": "US",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "Google News search feed tuned for US crypto security, scam, and enforcement coverage."
+    },
+    {
+      "name": "Google News Korea Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28%EA%B0%80%EC%83%81%EC%9E%90%EC%82%B0%20OR%20%EC%95%94%ED%98%B8%ED%99%94%ED%8F%90%20OR%20%EB%B9%84%ED%8A%B8%EC%BD%94%EC%9D%B8%29%20%28%ED%95%B4%ED%82%B9%20OR%20%EC%82%AC%EA%B8%B0%20OR%20%ED%94%BC%EC%8B%B1%20OR%20%ED%83%88%EC%B7%A8%20OR%20%EC%A0%9C%EC%9E%AC%29&hl=ko&gl=KR&ceid=KR:ko",
+      "enabled": true,
+      "region": "KR",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "Google News Korea search feed for Korean-language crypto hack, fraud, and enforcement coverage."
+    },
+    {
+      "name": "Google News Japan Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28%E6%9A%97%E5%8F%B7%E8%B3%87%E7%94%A3%20OR%20%E4%BB%AE%E6%83%B3%E9%80%9A%E8%B2%A8%20OR%20%E3%83%93%E3%83%83%E3%83%88%E3%82%B3%E3%82%A4%E3%83%B3%29%20%28%E3%83%8F%E3%83%83%E3%82%AD%E3%83%B3%E3%82%B0%20OR%20%E8%A9%90%E6%AC%BA%20OR%20%E3%83%95%E3%82%A3%E3%83%83%E3%82%B7%E3%83%B3%E3%82%B0%20OR%20%E6%B5%81%E5%87%BA%20OR%20%E8%A6%8F%E5%88%B6%29&hl=ja&gl=JP&ceid=JP:ja",
+      "enabled": true,
+      "region": "JP",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "Google News Japan search feed for Japanese-language crypto security and regulatory coverage."
+    },
+    {
+      "name": "Google News Canada Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28crypto%20OR%20bitcoin%20OR%20ethereum%29%20%28hack%20OR%20scam%20OR%20fraud%20OR%20phishing%20OR%20sanction%20OR%20seizure%29&hl=en-CA&gl=CA&ceid=CA:en",
+      "enabled": true,
+      "region": "CA",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "Google News Canada search feed for crypto fraud, phishing, and seizure coverage."
+    },
+    {
+      "name": "Google News Europe Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28crypto%20OR%20bitcoin%20OR%20ethereum%20OR%20MiCA%29%20%28hack%20OR%20scam%20OR%20fraud%20OR%20sanction%20OR%20laundering%20OR%20seizure%29&hl=en-GB&gl=GB&ceid=GB:en",
+      "enabled": true,
+      "region": "EU",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "English-language Europe proxy feed tuned for MiCA, sanctions, laundering, and fraud coverage."
+    },
+    {
+      "name": "Google News China Crypto Security",
+      "url": "https://news.google.com/rss/search?q=%28%E5%8A%A0%E5%AF%86%E8%B4%A7%E5%B8%81%20OR%20%E8%99%9A%E6%8B%9F%E8%B4%A7%E5%B8%81%20OR%20%E6%AF%94%E7%89%B9%E5%B8%81%29%20%28%E9%BB%91%E5%AE%A2%20OR%20%E8%AF%88%E9%AA%97%20OR%20%E6%B4%97%E9%92%B1%20OR%20%E7%9B%91%E7%AE%A1%20OR%20%E5%86%BB%E7%BB%93%29&hl=zh-CN&gl=CN&ceid=CN:zh-Hans",
+      "enabled": true,
+      "region": "CN",
+      "category": "search-aggregated",
+      "tier": "extended",
+      "notes": "Google News China search feed for Chinese-language crypto crime and enforcement coverage."
     }
   ]
 }

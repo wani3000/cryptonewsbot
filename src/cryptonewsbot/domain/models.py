@@ -35,6 +35,23 @@ class ArticleSummary:
     published_at: datetime
     template_type: str = "incident"
     incident_type: str = "general"
+    cluster_size: int = 1
+    related_sources: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class WritingStyleVariant:
+    name: str
+    x_instruction: str = ""
+    telegram_instruction: str = ""
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "WritingStyleVariant":
+        return cls(
+            name=str(payload.get("name", "default")).strip() or "default",
+            x_instruction=str(payload.get("x_instruction", "")),
+            telegram_instruction=str(payload.get("telegram_instruction", "")),
+        )
 
 
 @dataclass(frozen=True)
@@ -43,6 +60,8 @@ class GeneratedPost:
     headline: str
     body: str
     telegram_body: str = ""
+    writing_style_name: str = ""
+    x_posted_tweet_id: str = ""
     created_at: datetime = field(default_factory=utc_now)
     id: str = field(default_factory=lambda: str(uuid4()))
 
@@ -68,6 +87,7 @@ class StyleProfile:
     forbidden_phrases: List[str] = field(default_factory=list)
     signature: str = ""
     hashtags: List[str] = field(default_factory=list)
+    writing_style_variants: List[WritingStyleVariant] = field(default_factory=list)
     max_posts: int = 5
     max_post_length: int = 280
 
@@ -84,6 +104,9 @@ class StyleProfile:
             forbidden_phrases=[str(item) for item in payload.get("forbidden_phrases", [])],
             signature=str(payload.get("signature", "")),
             hashtags=[str(item) for item in payload.get("hashtags", [])],
+            writing_style_variants=[
+                WritingStyleVariant.from_dict(item) for item in payload.get("writing_style_variants", [])
+            ],
             max_posts=max(int(payload.get("max_posts", 5)), 1),
             max_post_length=max(int(payload.get("max_post_length", 280)), 80),
         )
@@ -96,4 +119,5 @@ class RunResult:
     summaries: List[ArticleSummary]
     posts: List[GeneratedPost]
     telegram_delivered: bool
+    x_delivered: bool
     feed_results: List[FeedFetchResult]

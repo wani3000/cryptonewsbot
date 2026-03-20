@@ -68,6 +68,28 @@
     "#CryptoSecurity",
     "#Web3Security"
   ],
+  "writing_style_variants": [
+    {
+      "name": "incident_briefing",
+      "x_instruction": "Keep the post structured like a crisp incident brief with a fact-first opening.",
+      "telegram_instruction": "Use a concise incident brief structure with analyst commentary and operational watchpoints."
+    },
+    {
+      "name": "operator_alert",
+      "x_instruction": "Write like ChainBounty is issuing an operator alert tied to active risk signals and immediate actions.",
+      "telegram_instruction": "Write like an operator notice with clearer action labels and defensive next steps."
+    },
+    {
+      "name": "casefile_note",
+      "x_instruction": "Write like ChainBounty is logging an investigation case note on the incident.",
+      "telegram_instruction": "Use a casefile-update tone with investigation angle, observed pattern, and next checks."
+    },
+    {
+      "name": "community_watch",
+      "x_instruction": "Write like a community watch post focused on repeated attacker signals and shared reporting value.",
+      "telegram_instruction": "Use a community-investigation tone with clearer asks and shared-defense framing."
+    }
+  ],
   "max_posts": 5,
   "max_post_length": 280
 }

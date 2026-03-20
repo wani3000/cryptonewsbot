@@ -7,10 +7,18 @@
 ## 현재 전제
 
 - 저장소는 문서 + Python MVP 코드가 존재하는 상태다.
-- Git 저장소는 초기화되어 있으며 GitHub 원격과 연결되어 있다.
-- 기존 코드, CLI 엔트리포인트, SQLite 스키마, 텔레그램/LLM/RSS 어댑터가 이미 존재한다.
+- Git 저장소는 이미 구성되어 있고 현재 브랜치는 `main`이다.
+- 기존 코드, API, ORM, 디렉토리 레이어는 실제 구현물 기준으로 존재한다.
 - 로컬 환경에서는 `Python 3.9.6` 사용 가능, `pytest`와 `uv`는 기본 제공되지 않는다.
-- 현재 시점의 계획은 "기존 MVP 유지보수 + 문서/Jira/테스트 상태 동기화 + 비UI 운영 안정화"다.
+- 현재 계획은 "운영 중인 Python MVP의 검증 가능성 유지 + 비UI 후속 품질 개선"으로 전환됐다.
+
+## 현재 재개 메모
+
+- 2026-03-19 기준 실제 Git 루트는 `/Users/chulwan/Documents/GitHub/cryptonewsbot`이다.
+- 작업 시작 시 로컬 워킹트리는 깨끗했고 `main...origin/main [ahead 1]` 상태였다.
+- `git fetch origin`, `git pull --ff-only`는 `Could not resolve host: github.com`으로 실패해 원격 최신화는 미완료다.
+- 접근 가능한 Jira 인스턴스의 `CHAIN` 프로젝트에서 연동 작업 태스크 `CHAIN-1`, `CHAIN-2`, `CHAIN-3`를 생성했다.
+- 현재 이어받은 비UI 작업은 ChainBounty X 자동 게시 1차 통합과 지역별 뉴스 소스 확장이다.
 
 ## 문제 해결 전략
 
@@ -52,7 +60,7 @@
 ## 예상 디렉토리 구조
 
 ```text
-/Users/hanwha/Documents/GitHub/cryptonewsbot
+/Users/chulwan/Documents/GitHub/cryptonewsbot
 ├── README.md
 ├── research.md
 ├── plan.md
@@ -173,17 +181,17 @@ def run_daily_digest(now: datetime) -> None:
 
 초기 생성은 완료되었다. 후속 개선 시 주요 변경 지점은 아래와 같다.
 
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/pyproject.toml`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/.env.example`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/config/style_profile.example.json`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/main.py`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/config.py`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/database.py`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/domain/*`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/application/*`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/infrastructure/*`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/interfaces/*`
-- `/Users/hanwha/Documents/GitHub/cryptonewsbot/tests/*`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/pyproject.toml`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/.env.example`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/config/style_profile.example.json`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/main.py`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/config.py`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/database.py`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/domain/*`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/application/*`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/infrastructure/*`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/src/cryptonewsbot/interfaces/*`
+- `/Users/chulwan/Documents/GitHub/cryptonewsbot/tests/*`
 
 ## 구현 시 고려 사항
 
@@ -212,6 +220,34 @@ def run_daily_digest(now: datetime) -> None:
 - 사용자가 미리 입력한 스타일/관점 정보를 반영해야 한다.
 - X에 올릴 수 있는 길이와 톤을 고려해야 한다.
 - 텔레그램 전송 실패 시 재시도 또는 로그 추적이 가능해야 한다.
+
+## 2026-03-20 통합 계획
+
+- `cryptonewsbot`를 주 오케스트레이터로 유지한다.
+- Telegram과 X를 별도 전달 채널로 본다.
+- X 자격 증명은 기존 `chainbounty-x-automation`와 같은 `TWITTER_*` 환경 변수 이름을 재사용한다.
+- X 게시 성공 시 root tweet id를 저장하고, Telegram 이력과 별개로 X 이력을 저장한다.
+- 운영 기본값은 X 비활성화다. 자격 증명과 `CRYPTO_NEWSBOT_ENABLE_X_POSTING=true`가 있을 때만 실제 게시한다.
+- 기본 뉴스 소스는 글로벌 매체 3개에서 지역별 매체/규제기관/검색 RSS 16개 세트로 확장한다.
+- 한국어/일본어/중국어 보안 키워드를 relevance 필터에 추가해 지역 기사를 더 안정적으로 통과시킨다.
+- 소스 메타데이터를 읽어 `regulator > media > search-aggregated` 우선순위를 정렬 점수에 반영한다.
+- 유사 사건은 story clustering으로 먼저 묶고, 대표 기사만 뒤 단계로 넘긴다.
+- LLM 프롬프트는 ChainBounty 회사/조사팀 관점을 명시해 neutral news voice를 줄인다.
+- 글쓰기 스타일은 여러 variant로 운영하고, 한 배치 안에서는 순환해 바로 같은 톤이 반복되지 않게 한다.
+- 날짜 기준으로 style rotation 시작점을 바꿔 매일 첫 포스트 톤도 달라지게 한다.
+- 스타일 사용 이력을 저장해 다음 실행은 마지막 스타일 다음 variant부터 이어서 시작한다.
+
+현재 구현 순서:
+
+1. X 설정값과 CLI 테스트 경로 추가
+2. SQLite 스키마에 X 전달 이력 추가
+3. 파이프라인에 선택적 X 게시 연결
+4. 테스트와 런타임 배포 정리
+5. 지역별 기본 피드 세트와 다국어 relevance 키워드 확장
+6. 소스 우선순위 기반 정렬로 검색 집계 소스 노이즈 완화
+7. story clustering으로 유사 사건을 한 묶음으로 접기
+8. ChainBounty 회사 관점 프롬프트 강화
+9. rotating writing styles로 daily content 톤 다양화
 
 ## Iteration
 
@@ -276,7 +312,7 @@ def run_daily_digest(now: datetime) -> None:
   - `scripts/run_daily.sh` 추가
   - `deploy/com.chainbounty.cryptonewsbot.daily.plist.template` 추가
   - `scripts/install_launchd.sh` 추가
-  - macOS `launchd` 기준 매일 09:00 실행 배포 경로 문서화
+  - macOS `launchd` 기준 매일 08:00 실행 배포 경로 문서화
 - 이유
   - 현재 사용자 환경이 macOS이고, 별도 서버 없이도 가장 단순하게 매일 자동 실행할 수 있기 때문
 
@@ -308,26 +344,6 @@ def run_daily_digest(now: datetime) -> None:
   - LaunchAgent가 개발용 `Documents` 경로 대신 런타임 경로를 실행하도록 전환
 - 이유
   - macOS 보호 폴더 제약 없이 `launchd`가 안정적으로 실행되게 만들기 위함
-
-### Iteration 10
-
-- 상태: ChainBounty 콘텐츠 가이드 반영 완료
-- 변경 사항
-  - 모호한 분석 표현 금지
-  - `ChainBounty analysis`를 더 큰 맥락, 반복 패턴, 예상 변화 중심으로 강화
-  - `Protection measures`를 뉴스 맥락 직접 연결 방식으로 강화
-- 이유
-  - 단순 요약이 아니라 보안 전문가 관점의 실질적 인사이트를 제공해야 하기 때문
-
-### Iteration 11
-
-- 상태: ChainBounty 포맷팅 가이드 반영 완료
-- 변경 사항
-  - 무볼드 헤드라인, 공백 라인, 섹션 헤더, 체크리스트 이모지 규칙 반영
-  - 텔레그램 본문 생성 단계 trim 제거
-  - fallback 템플릿을 A/B/C/D 스타일 구조에 더 가깝게 조정
-- 이유
-  - 텔레그램에서 스캔 가능한 포맷을 강제하고, 메시지 잘림 없이 구조화된 분석문을 보내기 위함
 
 ### Iteration 5
 
@@ -432,49 +448,13 @@ def run_daily_digest(now: datetime) -> None:
 
 ### Iteration 15
 
-- 상태: 2026-03-18 재투입 점검 완료
-- 확인 사항
-  - `README.md`, `research.md`, `plan.md`가 현재 Git/Jira/테스트 상태를 일부 반영하지 못하고 있었다.
-  - 로컬 `main`과 `origin/main`은 동일하다.
-  - accessible Jira 범위에서는 `cryptonewsbot` 또는 `ChainBounty` 전용 대표/하위 이슈 구조를 찾지 못했다.
-  - UI 승인 대기 중으로 확인된 이슈는 없다.
-- 인계 메모
-  - 다음 비UI 하위 태스크는 실제 실패 중인 테스트 복구와 문서 최신화였다.
-  - Jira 매핑은 추가 근거가 나오기 전까지 임의 생성/수정하지 않는다.
-
-### Iteration 16
-
-- 상태: 테스트 안정화 완료
-- 문제
-  - `tests/test_pipeline.py`의 RSS fixture가 `2026-03-11` 하드코딩 날짜를 사용해 조사 시점 기준 24시간 창 밖으로 밀려났다.
-- 후보 및 반증
-  1. fixture 날짜 stale
-     - 유지
-  2. 보안 relevance filter 과도 강화
-     - fixture 키워드와 스타일 프로필 focus topic 기준 반증
-  3. 포맷 검증 로직이 post를 폐기
-     - `run_result.articles == 0` 단계에서 실패하므로 반증
-- 최종 전략
-  - fixture 날짜를 현재 시점 기준 상대값으로 생성하도록 수정해 테스트를 시간 경과에 강한 형태로 바꾼다.
-- 실제 변경
-  - `tests/test_pipeline.py`에 `_build_rss_fixture()` 헬퍼를 추가하고 pubDate를 동적으로 생성하도록 수정
-- 검증
-  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
-  - 결과: `18` tests, `OK`
-
-### Iteration 17
-
-- 상태: 수집 단계 보안 키워드 필터 강화 완료
-- 문제
-  - 기존에는 RSS/Atom 수집 후 relevance filtering 단계에서만 보안 기사 선별이 이뤄져 일반 시장 뉴스도 일단 파이프라인에 들어왔다.
-- 전략
-  - 수집 단계에서 `exploit`, `hack`, `scam`, `phishing`, `drain`, `vulnerability`, `breach`, `compromise`가 title/summary/content에 없는 기사는 조기 제외한다.
-- 실제 변경
-  - `src/cryptonewsbot/infrastructure/rss.py`에 collection-stage keyword gate 추가
-  - `tests/test_rss.py`에 비보안 Atom entry 조기 제외 테스트 추가
-- 검증
-  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
-  - 결과: `19` tests, `OK`
+- 상태: 테스트 재현성 복구 완료
+- 변경 사항
+  - `tests/test_pipeline.py` RSS fixture를 현재 시점 기준으로 생성하도록 변경
+  - `scripts/run_tests.sh`를 추가해 `PYTHONPATH=src` 포함 표준 테스트 진입점 고정
+  - `README.md`, `research.md`, `plan.md`를 실제 Git/Jira/검증 상태 기준으로 동기화
+- 이유
+  - 문서에는 테스트 완료로 남아 있었지만, 실제 실행 결과는 import 경로와 고정 날짜 때문에 바로 재현되지 않았기 때문
 
 향후 피드백이 들어오면 이 섹션 아래에 Iteration 2, 3 형태로 누적 기록한다.
 
@@ -508,10 +488,9 @@ def run_daily_digest(now: datetime) -> None:
 - [x] `Codex` 공격 유형별(드레이너, 피싱, 브리지 해킹, 제재/압수, 피라미드 스캠) 세부 템플릿 분화
 - [x] `Codex` subtype별 LLM 출력 품질과 길이 제어 1차 튜닝
 - [x] `Codex` X 글자 제한 제거 및 thread-splitting 준비
-- [x] `Codex` 시간 경과에도 깨지지 않도록 파이프라인 테스트 RSS fixture를 동적 날짜 방식으로 안정화
-- [x] `Codex` 수집 단계에서 지정 보안 키워드가 없는 뉴스를 조기 제외하도록 RSS 필터 강화
-- [ ] `Codex` subtype별 LLM 문체 차이와 분석 깊이 추가 튜닝
-- [ ] `Codex` accessible Jira 범위에서 이 저장소 전용 대표/하위 이슈 구조를 추가 확인하거나, 확인 불가 상태를 운영 규칙에 맞게 정리
+- [x] `Codex` 파이프라인 테스트 기준시각 의존성 제거
+- [x] `Codex` `PYTHONPATH=src` 기준 표준 테스트 실행 스크립트 추가
+- [x] `Codex` subtype별 LLM 문체 차이와 분석 깊이 추가 튜닝
 - [ ] `Codex` 운영 배포 방식 확정
 
 ## 변경 이력
@@ -526,9 +505,32 @@ def run_daily_digest(now: datetime) -> None:
 - 운영용 기본 피드 세트와 수집 상태 추적 기능 반영
 - OpenAI `gpt-4.1-mini` 실호출 성공 및 운영 재작성 경로 활성화 반영
 - ChainBounty Writing Style Guide 반영 및 출력 포맷 1차 튜닝
+
+### 2026-03-10
+
+- `launchd` 실행 시각을 08:00으로 조정하고 로컬 런타임 재배포
+- 운영용 Telegram `.env` 연결 및 실전송 검증
+- 최종 포스트와 Telegram 본문에서 Markdown bold 표기 `**` 제거
 - 텔레그램 뉴스/게시글 1:1 순차 전송과 템플릿 분기 1차 구현 반영
 - 생성 누락 원인 수정과 보안 relevance 강화 반영
 - 보안 사건 전용 편향 강화와 community CTA 중심 출력 반영
 - 공격 유형별 세부 템플릿 분화 반영
 - X/Telegram 채널별 본문 분리와 텔레그램 장문 분석 반영
 - X 글자 제한 제거와 thread split 준비 반영
+
+### 2026-03-19
+
+- Git 재동기화를 시도했지만 DNS 해석 실패로 `fetch` / `pull`이 막힌 상태를 반영
+- 현재 저장소와 직접 매칭되는 Jira 이슈를 찾지 못해 번호 기반 작업 사이클은 보류했음을 반영
+- `tests/test_pipeline.py` RSS fixture를 현재 시점 기준으로 바꿔 24시간 윈도우 의존 실패를 제거
+- `scripts/run_tests.sh`를 추가해 `PYTHONPATH=src` 포함 테스트 진입점을 표준화
+- 문서 경로를 실제 작업자 홈(`/Users/chulwan`) 기준으로 정정
+- subtype별 incident guidance를 중앙화해 LLM X/Telegram 프롬프트와 fallback Telegram 본문에 공통 반영
+- Gemini JSON schema에 `telegram_body`를 추가해 채널별 출력 계약을 코드와 일치시킴
+
+### 2026-03-20
+
+- ChainBounty X 연동 설계 메모 `chainbounty_x_integration.md` 추가
+- Jira `CHAIN-1`, `CHAIN-2`, `CHAIN-3` 생성
+- X 게시용 환경 변수, CLI 테스트 명령, X 전달 이력 저장, 선택적 X 채널 파이프라인 연결
+- X thread 게시를 위한 root tweet id 저장과 테스트 추가

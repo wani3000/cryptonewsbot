@@ -9,7 +9,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="run",
-        choices=["run", "telegram-get-updates", "telegram-send-test"],
+        choices=["run", "telegram-get-updates", "telegram-send-test", "x-send-test"],
         help="Command to execute",
     )
     parser.add_argument(

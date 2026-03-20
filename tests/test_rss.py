@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from xml.etree import ElementTree
 
-from cryptonewsbot.infrastructure.rss import RSSCollector
+from cryptonewsbot.infrastructure.rss import RSSCollector, parse_pub_date
 
 
 ATOM_FIXTURE = textwrap.dedent(
@@ -28,6 +28,11 @@ ATOM_FIXTURE = textwrap.dedent(
 
 
 class RSSTests(unittest.TestCase):
+    def test_parse_pub_date_supports_fca_style_dates(self) -> None:
+        parsed = parse_pub_date("Wednesday, March 18, 2026 - 10:14")
+
+        self.assertEqual(parsed, datetime(2026, 3, 18, 10, 14, tzinfo=timezone.utc))
+
     def test_collect_atom_feed_supports_namespaces(self) -> None:
         root = ElementTree.fromstring(ATOM_FIXTURE)
         collector = RSSCollector()

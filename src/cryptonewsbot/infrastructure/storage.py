@@ -41,6 +41,41 @@ class SQLiteRepository:
         finally:
             connection.close()
 
+    def get_recent_x_delivered_article_keys(self, since: datetime) -> Tuple[Set[str], Set[str]]:
+        connection = connect(self._database_path)
+        try:
+            rows = connection.execute(
+                """
+                SELECT fingerprint, canonical_url
+                FROM delivered_x_posts
+                WHERE delivered_at >= ?
+                """,
+                (since.isoformat(),),
+            ).fetchall()
+            fingerprints = {row["fingerprint"] for row in rows}
+            canonical_urls = {row["canonical_url"] for row in rows}
+            return fingerprints, canonical_urls
+        finally:
+            connection.close()
+
+    def get_last_writing_style_name(self) -> str:
+        connection = connect(self._database_path)
+        try:
+            row = connection.execute(
+                """
+                SELECT writing_style_name
+                FROM generated_posts
+                WHERE writing_style_name != ''
+                ORDER BY created_at DESC, id DESC
+                LIMIT 1
+                """
+            ).fetchone()
+            if row is None:
+                return ""
+            return str(row["writing_style_name"] or "")
+        finally:
+            connection.close()
+
     def save_run(
         self,
         run_id: str,
@@ -49,6 +84,7 @@ class SQLiteRepository:
         posts: Iterable[GeneratedPost],
         feed_results: Iterable[FeedFetchResult],
         delivered_to_telegram: bool,
+        delivered_to_x: bool,
     ) -> None:
         connection = connect(self._database_path)
         try:
@@ -87,8 +123,10 @@ class SQLiteRepository:
                 persisted_article_ids[article.id] = article.id
             connection.execute(
                 """
-                INSERT INTO runs (id, started_at, article_count, post_count, delivered_to_telegram, feed_error_count)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO runs (
+                    id, started_at, article_count, post_count, delivered_to_telegram, delivered_to_x, feed_error_count
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     run_id,
@@ -96,6 +134,7 @@ class SQLiteRepository:
                     len(article_list),
                     len(post_list),
                     1 if delivered_to_telegram else 0,
+                    1 if delivered_to_x else 0,
                     len([result for result in feed_result_list if result.status != "ok"]),
                 ),
             )
@@ -118,8 +157,10 @@ class SQLiteRepository:
             for post in post_list:
                 connection.execute(
                     """
-                    INSERT INTO generated_posts (id, run_id, article_id, headline, body, telegram_body, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO generated_posts (
+                        id, run_id, article_id, headline, body, telegram_body, writing_style_name, x_posted_tweet_id, created_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         post.id,
@@ -128,6 +169,8 @@ class SQLiteRepository:
                         post.headline,
                         post.body,
                         post.telegram_body,
+                        post.writing_style_name,
+                        post.x_posted_tweet_id,
                         post.created_at.isoformat(),
                     ),
                 )
@@ -143,6 +186,28 @@ class SQLiteRepository:
                             article.fingerprint,
                             article.canonical_url,
                             article.title,
+                            started_at.isoformat(),
+                        ),
+                    )
+            if delivered_to_x:
+                article_by_id = {article.id: article for article in article_list}
+                for post in post_list:
+                    if not post.x_posted_tweet_id:
+                        continue
+                    article = article_by_id.get(post.article_id)
+                    if article is None:
+                        continue
+                    connection.execute(
+                        """
+                        INSERT INTO delivered_x_posts (run_id, fingerprint, canonical_url, title, tweet_id, delivered_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            run_id,
+                            article.fingerprint,
+                            article.canonical_url,
+                            article.title,
+                            post.x_posted_tweet_id,
                             started_at.isoformat(),
                         ),
                     )

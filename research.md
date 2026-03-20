@@ -6,20 +6,23 @@
 
 ## 조사 시점
 
-- 날짜: 2026-03-18
-- 작업 디렉토리: `/Users/hanwha/Documents/GitHub/cryptonewsbot`
+- 날짜: 2026-03-20
+- 작업 디렉토리: `/Users/chulwan/Documents/GitHub/cryptonewsbot`
 
 ## 조사 방법
 
 아래 항목을 직접 확인했다.
 
 - 현재 작업 경로 확인
-- 루트 디렉토리 및 핵심 모듈 목록 확인
-- Git 브랜치 / fetch / merge 상태 확인
-- `origin/main`과 로컬 `main` 동기화 상태 확인
-- `README.md`, `research.md`, `plan.md` 실제 내용 확인
-- `unittest` 전체 실행 결과 확인
-- Jira accessible project / JQL 검색 결과 확인
+- 루트 디렉토리 파일 목록 확인
+- 상위 디렉토리 구조 확인
+- Git 저장소 여부 확인
+- 저장소 내 추적 가능한 파일 존재 여부 확인
+- Git 브랜치 / 상태 / 최근 커밋 확인
+- `git fetch origin`, `git pull --ff-only` 실행 시도
+- `unittest` 실제 실행 결과 확인
+- 접근 가능한 Jira 프로젝트와 이슈 검색
+- ChainBounty X 자동화 저장소 구조 확인
 
 ## 확인 결과 요약
 
@@ -30,26 +33,32 @@
 - `pyproject.toml`
 - `.env.example`
 - `config/style_profile.example.json`
+- `config/style_profile.production.json`
 - `config/feeds/crypto_sources.json`
+  - 글로벌/지역별 기본 피드 세트 정의
 - `style-guide.html`
 - `src/cryptonewsbot/*`
 - `tests/*`
+- `scripts/run_daily.py`
+- `scripts/run_tests.sh`
 
 즉, 저장소는 이제 문서 전용 상태가 아니라 실행 가능한 MVP 코드베이스가 되었다.
 
 ### 2. Git 상태
 
-- 현재 디렉토리는 Git 저장소이며 `origin`은 `https://github.com/wani3000/cryptonewsbot.git`로 연결되어 있다.
-- `git fetch origin` 이후 `git rev-parse HEAD`와 `git rev-parse origin/main`이 동일하게 `96b1bba2a95effeb81d0b1a6f45c57fd6abfb3f5`를 가리킨다.
-- `git pull --ff-only origin main`은 로컬 브랜치 설정 때문에 `Cannot fast-forward to multiple branches`로 실패했지만, `git merge --ff-only origin/main` 결과는 `Already up to date.`였다.
-- 조사 시점 기준 uncommitted 변경사항은 문서/테스트 복구 작업 전에는 없었고, 이후 수정분만 남는다.
+- 현재 디렉토리는 Git 저장소다.
+- 원격은 `https://github.com/wani3000/cryptonewsbot.git`로 설정되어 있다.
+- 기본 브랜치는 `main`이다.
+- 작업 시작 시 워킹트리는 깨끗했고, 로컬 브랜치는 `origin/main` 대비 1커밋 앞서 있었다.
+- `git fetch origin`, `git pull --ff-only`는 모두 `Could not resolve host: github.com`으로 실패했다.
+- 최근 커밋 3개는 `0bef623 Update schedule and strip markdown formatting`, `4757b8d Stabilize local launchd runtime and repeat suppression`, `f7c9a28 Initial cryptonewsbot MVP and local deployment setup`다.
 
-### 2-1. Jira 접근 상태
+### 2-1. Jira 조회 결과
 
-- accessible Jira 프로젝트는 `AP`, `BIB`, `CON`, `IW`, `MAR`, `PT`, `SCRUM` 7개다.
-- `cryptonewsbot`, `ChainBounty`, `Telegram + crypto/news`, `launchd/RSS` 기준 JQL 검색을 직접 실행했지만 현재 accessible 범위에서는 이 저장소와 직접 매핑되는 이슈를 찾지 못했다.
-- 즉, "Jira 이슈 구조가 이미 잡혀 있다"는 사용자 진술과 달리 현재 도구 접근 범위 안에서는 이 저장소 전용 대표/하위 이슈가 아직 확인되지 않는다.
-- 따라서 본 조사 시점에서는 Jira 상태를 임의로 바꾸지 않았고, 문서에 증거 기반으로 이 불일치를 남긴다.
+- 접근 가능한 Jira Cloud는 `https://oxaz1234.atlassian.net` 하나였다.
+- 조회 가능한 프로젝트에는 `CHAIN`도 포함되어 있었다.
+- 2026-03-20 기준으로 ChainBounty X 연동 작업용 태스크 `CHAIN-1`, `CHAIN-2`, `CHAIN-3`를 생성했다.
+- 현재 저장소와 직접 연결된 Jira 작업 트래킹은 위 3개 이슈를 기준으로 시작된 상태다.
 
 ### 3. 현재 애플리케이션 구조
 
@@ -66,14 +75,28 @@
 - `src/cryptonewsbot/application/*`
   - 정규화, 중복 제거, relevance filtering, 템플릿 분류, 요약, ChainBounty 스타일 기반 포스트 생성, digest formatting, 파이프라인 orchestration
 - `src/cryptonewsbot/infrastructure/*`
-  - RSS/Atom 수집기, SQLite 저장소, Telegram 전송기
+  - RSS/Atom 수집기, SQLite 저장소, Telegram 전송기, X 게시 클라이언트
 - `.env`
   - 로컬 텔레그램 토큰과 런타임 설정 저장
   - 현재 `chat_id`까지 반영되어 테스트 전송 성공
 - `tests/*`
   - deduplication, post generation, pipeline 검증
+- `tests/test_config.py`
+  - `.env` 로딩 검증
+- `tests/test_filtering.py`
+  - 보안 relevance와 incident subtype 분류 검증
+- `tests/test_clustering.py`
+  - 유사 사건 story clustering과 representative 선택 검증
+- `config/style_profile.production.json`
+  - 운영용 writing style variants 정의
+- `config/feeds/crypto_sources.json`
+  - source category 외에 `tier` 메타데이터도 포함
 - `scripts/run_daily.sh`
   - 로컬 운영 실행 스크립트
+- `scripts/run_daily.py`
+  - `src` 레이아웃 진입용 Python 래퍼
+- `scripts/run_tests.sh`
+  - `PYTHONPATH=src`를 고정한 표준 테스트 진입점
 - `scripts/install_launchd.sh`
   - macOS `launchd` LaunchAgent 설치 스크립트
 - `scripts/deploy_local_runtime.sh`
@@ -109,7 +132,8 @@
 9. `format_telegram_message_pairs`가 `뉴스 메시지 -> ChainBounty 게시글 메시지` 쌍을 만든다.
    - 뉴스 제목 라인에는 기사 유형에 맞는 이모지를 함께 붙인다.
 10. `TelegramClient`가 메시지 리스트를 순서대로 전송한다.
-11. `SQLiteRepository`가 run/article/post 결과를 저장한다.
+11. 선택적으로 `XClient`가 생성된 ChainBounty 포스트를 X에 regular tweet 또는 thread로 게시한다.
+12. `SQLiteRepository`가 run/article/post 결과와 Telegram/X 전달 결과를 저장한다.
 
 ### 5. 데이터 관리 방식
 
@@ -127,6 +151,8 @@
   - 피드별 수집 성공/실패, 아이템 수, 에러 메시지 저장
 - `delivered_articles`
   - 실제 텔레그램 전송된 기사 fingerprint/canonical URL 이력 저장
+- `delivered_x_posts`
+  - 실제 X 전송된 기사 fingerprint/canonical URL/tweet_id 이력 저장
 
 중복 제거 방식:
 
@@ -140,7 +166,7 @@
 
 - 뉴스 수집
   - RSS 2.0 `channel/item`과 Atom `feed/entry` 구조 파싱
-  - 수집 단계에서 `exploit`, `hack`, `scam`, `phishing`, `drain`, `vulnerability`, `breach`, `compromise` 키워드가 없는 기사는 조기 제외
+  - 기본 피드 세트는 미국/글로벌 매체, 한국/일본 지역 매체, 미국/유럽/일본/캐나다/홍콩 규제기관 피드, 미국/한국/유럽/캐나다/일본/중국 Google News 검색 RSS로 확장되었다.
 - 수집 소스 정규화
   - URL의 `utm_*`, `fbclid`, `gclid` 제거
   - 공백 정리
@@ -154,29 +180,57 @@
   - `drainer`, `phishing`, `bridge_hack`, `sanction_seizure`, `pyramid_scam`, `general`로 추가 세분화
 - 보안 사건 필터링
   - `hack`, `scam`, `fraud`, `phishing`, `exploit`, `wallet drain`, `laundering`, `seized` 등 보안 사건 신호가 강한 기사 우선
+  - 한국어/일본어/중국어 보안 키워드도 함께 인식해 지역 기사 relevance를 잡는다.
+  - 소스 카테고리 우선순위를 함께 반영해 `regulator > media > search-aggregated` 순으로 정렬한다.
   - 일반 가격/ETF/거시 시장 기사만 있는 경우는 제외
+- story clustering
+  - relevance selection 전에 유사 제목/요약을 기준으로 같은 사건을 묶는다.
+  - 대표 기사는 source priority와 내용 밀도로 선택한다.
+  - cluster size와 related source 정보는 이후 summary/prompt 단계로 전달된다.
+- source curation / selection precision
+  - source priority는 `category + tier` 조합으로 계산된다.
+  - 현재 tier는 `core`, `extended`, `watch`를 지원한다.
+  - search-aggregated 기사에는 stronger security signal requirement를 적용한다.
+  - `best crypto to buy`, `presale`, `token launch`, `price prediction` 같은 프로모션/SEO 노이즈는 기본적으로 제외한다.
 - 요약
   - 규칙 기반 `key_point`, `why_it_matters` 생성
 - 사용자 기준 기반 재가공
   - 스타일 프로필의 금지 표현, signature, hashtag, audience 반영
+  - LLM 프롬프트에 `incident_type`별 문체, ChainBounty 분석 포인트, Telegram 확장 깊이 지시 반영
 - X 포스트 포맷팅
-  - headline은 80자 내외로 trim하지만 body는 더 이상 280자 제한으로 자르지 않는다.
-  - 텔레그램용 `telegram_body`는 별도 생성 후 전송 계층에서만 분할한다.
+  - 길이 제한 기반 trim 처리
+  - subtype별 incident guidance를 이용해 문체/분석 강조점을 분기
+  - 최종 X 전송 시 280자 초과 본문은 thread로 분할 가능
 - 텔레그램 전송
   - dry-run 또는 Bot API `sendMessage`
+  - 최종 전송 본문에서는 Markdown bold 표기 `**`를 제거해 Telegram에서 원문 기호가 그대로 노출되지 않게 정리
+  - LLM 실패 시에도 subtype별 watchpoint가 들어간 더 긴 fallback Telegram 본문 생성
 - 텔레그램 운영 진단
   - `telegram-get-updates` 커맨드로 최근 업데이트 확인
   - `telegram-send-test` 커맨드로 수동 테스트 메시지 전송
+- X 운영 진단
+  - `x-send-test` 커맨드로 수동 X 테스트 게시 가능
 - 선택적 LLM 재작성
   - `CRYPTO_NEWSBOT_LLM_API_KEY`, `CRYPTO_NEWSBOT_LLM_MODEL`이 설정되면 OpenAI-compatible endpoint 호출
   - 미설정 또는 실패 시 규칙 기반 생성으로 fallback
   - Gemini provider도 지원하며 `generateContent` 호출 결과를 JSON으로 파싱
-  - 최신 ChainBounty 작성 가이드 기준으로 모호한 분석 문구를 금지하고, 더 큰 맥락과 직접 대응책을 요구
-  - 최신 포맷팅 가이드 기준으로 무볼드 헤드라인, 공백 라인, 섹션 헤더, 체크리스트 형식을 강제
 - 운영 피드 관리
   - `CRYPTO_NEWSBOT_FEED_URLS`가 비어 있으면 `config/feeds/crypto_sources.json` 사용
 - 피드 모니터링
   - digest 하단과 DB에 피드별 OK/Error 상태 기록
+- X 통합
+  - `CRYPTO_NEWSBOT_ENABLE_X_POSTING`, `CRYPTO_NEWSBOT_X_DRY_RUN`, `CRYPTO_NEWSBOT_X_MAX_POSTS`로 제어
+  - `TWITTER_API_KEY`, `TWITTER_API_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET`를 사용
+  - 게시 성공 시 root tweet id를 `generated_posts`와 `delivered_x_posts`에 함께 저장
+- ChainBounty 회사 관점 프롬프트
+  - LLM 시스템/유저 프롬프트에 ChainBounty를 커뮤니티 기반 crypto crime investigation 플랫폼으로 명시한다.
+  - neutral news voice 대신 ChainBounty 조사팀/보안팀 브리핑 톤을 지시한다.
+- writing style rotation
+  - 기본 글쓰기 스타일은 `incident_briefing`, `operator_alert`, `casefile_note`, `community_watch` 4종이다.
+  - 한 배치 안에서는 바로 같은 스타일이 반복되지 않도록 순환한다.
+  - 날짜 기준으로 시작 스타일이 회전해 매일 같은 톤으로 시작하지 않게 한다.
+  - 생성된 `writing_style_name`은 DB에 저장되고, 다음 실행은 마지막 사용 스타일의 다음 variant부터 이어서 시작한다.
+  - 스타일별로 opening pattern과 analyst phrasing도 분기한다.
 
 현재 미구현 영역:
 
@@ -189,32 +243,44 @@
 
 현재 외부 배포 상태:
 
-- Git 저장소는 이미 존재하며 GitHub 원격과 동기화된다.
+- Git 저장소는 이미 구성되어 있고, 로컬 운영 배포는 macOS `launchd` 기준으로 구성되어 있다.
 - `scripts/install_launchd.sh`는 `~/Library/LaunchAgents/com.chainbounty.cryptonewsbot.daily.plist`를 생성하고 등록한다.
-- 기본 실행 시각은 매일 09:00 로컬 시간이다.
-- 개발 저장소가 `/Users/hanwha/Documents/...` 아래에 있어 `launchd` 직접 실행은 `Operation not permitted`로 실패할 수 있다.
+- 기본 실행 시각은 매일 08:00 로컬 시간이다.
+- `config/feeds/crypto_sources.json`의 현재 기본 소스 수는 16개다.
+- 현재 Jira 후속 작업으로 `CHAIN-4`(company-angle prompt 강화), `CHAIN-5`(story clustering), `CHAIN-6`(source curation), `CHAIN-7`(selection precision), `CHAIN-8`(rotating writing styles)가 추가되었다.
+- 현재 LaunchAgent는 `~/bots/cryptonewsbot` 런타임을 기준으로 재설치되어 있다.
+- 개발 저장소가 `/Users/chulwan/Documents/...` 아래에 있어 `launchd` 직접 실행은 `Operation not permitted`로 실패할 수 있다.
 - 이를 피하기 위해 런타임 경로를 `~/bots/cryptonewsbot`로 분리하고, LaunchAgent는 그 복사본만 실행하도록 조정했다.
 
-### 7. 산출물/실행 결과 기준 현 상태
+### 7. 2026-03-19 테스트 재현성 재검증
 
-- 실제 테스트 산출물
-  - `PYTHONPATH=src python3 -m unittest discover -s tests -v`
-  - 조사 초반에는 `tests/test_pipeline.py`의 3개 테스트가 실패했다.
-- 원인 후보와 반증
-  1. RSS fixture 날짜가 24시간 창 밖이다.
-     - `tests/test_pipeline.py`의 `pubDate`가 `Wed, 11 Mar 2026`로 하드코딩되어 있었고, 조사일은 `2026-03-18`이다. 이 후보는 유지됐다.
-  2. 보안 relevance filter가 너무 엄격하다.
-     - fixture 기사 제목/본문이 `wallet drainer`, `phishing`, `malicious approvals`를 포함하고 스타일 프로필도 `drainer`, `phishing`을 focus topic으로 갖기 때문에 반증됐다.
-  3. 최근 포맷 강제 로직이 post를 폐기한다.
-     - 실패 시점이 post generation 이전이며 `run_result.articles == 0`이므로 반증됐다.
-- 최종 결론
-  - 실패 원인은 로직 회귀가 아니라 테스트 fixture 날짜의 경직성이다.
-- 조치 결과
-  - `tests/test_pipeline.py`를 수정해 RSS fixture 날짜를 현재 시각 기준 상대값으로 생성하게 변경했다.
-  - 수정 후 `unittest` 전체 `18`건이 통과한다.
-- 런타임 검증 메모
-  - `PYTHONPATH=src python3 -m cryptonewsbot.main run`은 live RSS/LLM/Telegram I/O가 포함된 경로이므로 짧은 검증 윈도우 내 즉시 종료를 보장하지 않는다.
-  - 따라서 현재 세션의 deterministic 검증 기준은 전체 `unittest` 통과다.
+원인을 단정하기 전에 아래 후보 3개를 분리해 반증했다.
+
+1. 후보: `src` 레이아웃 import 경로가 기본 `unittest` 실행에 반영되지 않아 테스트가 실패한다.
+   - 검증: `python3 -m unittest discover -s tests` 실행 결과 `ModuleNotFoundError: No module named 'cryptonewsbot'`가 재현됐다.
+   - 반증 결과: `PYTHONPATH=/Users/chulwan/Documents/GitHub/cryptonewsbot/src python3 -m unittest discover -s tests`로 import 오류는 사라졌다.
+   - 결론: 실행 진입점 문제는 실제로 존재한다.
+2. 후보: 보안 편향 필터가 `Bitcoin ETF flows keep rising` 기사를 모두 제외해서 파이프라인 테스트가 깨진다.
+   - 검증: 같은 제목/요약을 현재 시점 `published_at`으로 만든 단일 기사에 `select_relevant_articles`를 직접 호출했을 때 `selected_count 1`이 나왔다.
+   - 반증 결과: 필터 단독으로는 이 기사 케이스를 제거하지 않았다.
+   - 결론: 주요 원인은 아니다.
+3. 후보: repeat suppression / delivered dedupe가 첫 실행부터 게시글을 막고 있다.
+   - 검증: 현재 시점 `pubDate`를 가진 RSS fixture로 fresh DB에서 `run_daily_digest`를 실행했을 때 `articles 1 posts 1 delivered True`가 나왔다.
+   - 반증 결과: 첫 실행에는 suppression이 조기 적용되지 않았다.
+   - 결론: 주요 원인은 아니다.
+
+최종 결론:
+
+- 실제 파이프라인 테스트 실패의 직접 원인은 고정 날짜 RSS fixture가 현재 시점에서 24시간 윈도우 밖으로 밀려 `No new crypto news matched the current rules in the last 24 hours.`가 발생한 것이다.
+- 별도로, 기본 `unittest` 실행만으로는 `src` 레이아웃 import가 풀리지 않아 표준 테스트 진입점도 부족했다.
+- 따라서 `tests/test_pipeline.py`의 RSS fixture를 현재 시점 기준으로 바꾸고, `scripts/run_tests.sh`를 추가해 재현 가능한 테스트 경로를 고정했다.
+
+### 8. ChainBounty X 연동 조사 결과
+
+- 별도 저장소 `chainbounty-x-automation`는 X 검색, Claude 기반 코멘트 생성, quote tweet 게시 흐름을 갖고 있었다.
+- 이번 연동 방향에서는 그 저장소의 핵심 재사용 포인트를 “X 인증/게시 자격 증명 규칙”과 “게시 이력 관리 개념”으로 한정했다.
+- 실제 통합은 `cryptonewsbot`를 오케스트레이터로 유지하고, 기사 수집과 ChainBounty 재작성 이후 X를 두 번째 전달 채널로 붙이는 방식이 가장 단순했다.
+- 별도 설계 메모는 [chainbounty_x_integration.md](/Users/chulwan/Documents/GitHub/cryptonewsbot/chainbounty_x_integration.md)에 기록했다.
 
 ## 구현 대상 기능과 직접 연관된 조사 결과
 
@@ -241,8 +307,8 @@
 - RSS/Atom 외 변형 피드에는 취약할 수 있다.
 - 실제 운영 피드 품질과 기사 본문 길이에 따라 relevance filtering 품질이 달라질 수 있다.
 - 텔레그램 전송 실패 시 현재는 예외 전파 외 추가 재시도 로직이 없다.
-- live run 경로는 외부 RSS/LLM/Telegram 응답 시간에 따라 검증 시간이 길어질 수 있다.
-- accessible Jira 범위 안에서 이 저장소 전용 이슈가 확인되지 않아, 코드 상태와 Jira 상태를 완전히 동기화하지 못한 상태다.
+- 외부 네트워크가 막힌 환경에서는 `git fetch`, `git pull`, 실 API quota 확인 같은 원격 검증이 제한된다.
+- 기본 `python3 -m unittest discover -s tests`는 여전히 `src` 경로를 자동으로 잡지 않으므로, 테스트는 `zsh scripts/run_tests.sh` 기준으로 실행해야 한다.
 
 ## 권장 후속 조사 항목
 
@@ -255,16 +321,6 @@
 - 외부 스케줄러(cron, GitHub Actions, 서버 cron) 방식
 
 ## 변경 이력
-
-### 2026-03-18
-
-- 재투입 에이전트가 문서, Git, Jira, 테스트 산출물을 기준으로 현재 상태를 재검증했다.
-- `origin/main`과 로컬 `main`이 동일함을 확인했다.
-- accessible Jira에서 `cryptonewsbot` 전용 이슈를 찾지 못한 사실을 기록했다.
-- 파이프라인 테스트 3건 실패 원인을 후보 3개로 나눈 뒤 반증했고, 최종적으로 stale RSS fixture 날짜 문제로 결론 내렸다.
-- `tests/test_pipeline.py`를 현재 시각 기준 동적 fixture 방식으로 수정했고 `unittest` 18건 통과를 재확인했다.
-- stale 문구였던 "Git 저장소는 아직 없지만"을 현재 상태에 맞게 수정했다.
-- RSS 수집기 단계에서 보안 키워드 조기 필터를 추가해 일반 시장/업그레이드 뉴스가 후속 파이프라인으로 들어오지 않도록 강화했다.
 
 ### 2026-03-09
 
@@ -295,5 +351,26 @@
 - `launchd` 실실행이 `Documents` 폴더 접근 제한으로 막히는 운영 제약을 확인했음을 기록
 - 최근 실제 전송된 기사만 `repeat suppression` 윈도우 동안 다시 보내지 않도록 `delivered_articles` 기반 dedupe를 추가했음을 기록
 - 로컬 Mac 상시 운영용으로 `~/bots/cryptonewsbot` 런타임 동기화 스크립트를 추가했음을 기록
-- 최신 ChainBounty 작성 가이드에 맞춰 `ChainBounty analysis`와 `Protection measures`를 더 구체적으로 강화했음을 기록
-- 텔레그램 본문은 생성 단계에서 자르지 않고, 전송 계층에서만 4096자 기준으로 분할하도록 유지했음을 기록
+
+### 2026-03-10
+
+- GitHub 원격 저장소를 현재 작업 경로로 clone해 Git 관리 상태로 전환했음을 기록
+- 기본 `launchd` 실행 시각을 매일 08:00으로 조정하고 문서와 배포 템플릿을 동기화했음을 기록
+- 운영용 `.env`를 연결해 Telegram 테스트 메시지와 실제 daily run 전송을 검증했음을 기록
+- 최종 생성 본문에서 Markdown bold 표기 `**`가 남지 않도록 후처리와 템플릿을 조정했음을 기록
+
+### 2026-03-19
+
+- 실제 Git 루트가 `/Users/chulwan/Documents/GitHub/cryptonewsbot`임을 재확인하고, `~/bots/cryptonewsbot`은 런타임 복사본임을 분리 기록
+- `git fetch origin`, `git pull --ff-only`가 DNS 해석 실패로 막힌 상태를 기록
+- 접근 가능한 Jira 인스턴스에서 현재 저장소와 직접 매칭되는 이슈를 찾지 못한 사실을 기록
+- 기본 `unittest discover`가 `src` 레이아웃 import를 재현하지 못함을 기록
+- 파이프라인 테스트 실패 후보 3개를 검증하고, 고정 날짜 RSS fixture가 직접 원인임을 반영
+- `scripts/run_tests.sh` 추가와 `tests/test_pipeline.py` 현재 시점 fixture 전환으로 테스트 재현성을 복구했음을 기록
+
+### 2026-03-20
+
+- ChainBounty X 자동 게시 1차 통합 설계 메모를 추가했음을 기록
+- Jira `CHAIN-1`, `CHAIN-2`, `CHAIN-3`를 생성해 연동 작업을 추적하기 시작했음을 기록
+- `XClient`, X 관련 `.env` 설정, CLI 테스트 명령, X 전달 이력 저장을 추가했음을 기록
+- `zsh scripts/run_tests.sh` 기준 24개 테스트가 통과함을 기록

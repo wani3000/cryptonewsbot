@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS runs (
     article_count INTEGER NOT NULL,
     post_count INTEGER NOT NULL,
     delivered_to_telegram INTEGER NOT NULL,
+    delivered_to_x INTEGER NOT NULL DEFAULT 0,
     feed_error_count INTEGER NOT NULL DEFAULT 0
 );
 
@@ -34,6 +35,8 @@ CREATE TABLE IF NOT EXISTS generated_posts (
     headline TEXT NOT NULL,
     body TEXT NOT NULL,
     telegram_body TEXT NOT NULL DEFAULT '',
+    writing_style_name TEXT NOT NULL DEFAULT '',
+    x_posted_tweet_id TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     FOREIGN KEY(run_id) REFERENCES runs(id),
     FOREIGN KEY(article_id) REFERENCES articles(id)
@@ -59,6 +62,17 @@ CREATE TABLE IF NOT EXISTS delivered_articles (
     delivered_at TEXT NOT NULL,
     FOREIGN KEY(run_id) REFERENCES runs(id)
 );
+
+CREATE TABLE IF NOT EXISTS delivered_x_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    canonical_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    tweet_id TEXT NOT NULL,
+    delivered_at TEXT NOT NULL,
+    FOREIGN KEY(run_id) REFERENCES runs(id)
+);
 """
 
 
@@ -69,6 +83,21 @@ def connect(database_path: Path) -> sqlite3.Connection:
     connection.executescript(SCHEMA)
     try:
         connection.execute("ALTER TABLE generated_posts ADD COLUMN telegram_body TEXT NOT NULL DEFAULT ''")
+        connection.commit()
+    except sqlite3.OperationalError:
+        pass
+    try:
+        connection.execute("ALTER TABLE generated_posts ADD COLUMN x_posted_tweet_id TEXT NOT NULL DEFAULT ''")
+        connection.commit()
+    except sqlite3.OperationalError:
+        pass
+    try:
+        connection.execute("ALTER TABLE generated_posts ADD COLUMN writing_style_name TEXT NOT NULL DEFAULT ''")
+        connection.commit()
+    except sqlite3.OperationalError:
+        pass
+    try:
+        connection.execute("ALTER TABLE runs ADD COLUMN delivered_to_x INTEGER NOT NULL DEFAULT 0")
         connection.commit()
     except sqlite3.OperationalError:
         pass

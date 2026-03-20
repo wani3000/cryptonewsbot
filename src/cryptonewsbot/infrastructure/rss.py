@@ -34,6 +34,9 @@ COLLECTION_SECURITY_KEYWORDS = [
     "breach",
     "compromise",
 ]
+FALLBACK_DATE_FORMATS = [
+    "%A, %B %d, %Y - %H:%M",
+]
 
 
 class RSSCollectionResult:
@@ -134,7 +137,7 @@ def parse_pub_date(value: str | None) -> datetime:
     try:
         parsed = parsedate_to_datetime(value)
     except (TypeError, ValueError, IndexError, OverflowError):
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = _parse_fallback_date(value)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
@@ -173,6 +176,15 @@ def _strip_namespace(tag: str) -> str:
     if "}" in tag:
         return tag.split("}", 1)[1]
     return tag
+
+
+def _parse_fallback_date(value: str) -> datetime:
+    for pattern in FALLBACK_DATE_FORMATS:
+        try:
+            return datetime.strptime(value, pattern)
+        except ValueError:
+            continue
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def _has_collection_security_keyword(item: Dict[str, object]) -> bool:

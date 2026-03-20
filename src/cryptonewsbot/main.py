@@ -5,6 +5,7 @@ import sys
 from cryptonewsbot.application.pipeline import run_daily_digest
 from cryptonewsbot.config import AppConfig, ConfigError
 from cryptonewsbot.infrastructure.telegram import TelegramClient
+from cryptonewsbot.infrastructure.x import XClient
 from cryptonewsbot.interfaces.cli import build_parser
 
 
@@ -30,6 +31,13 @@ def _send_telegram_test(config: AppConfig, message: str) -> int:
     return 0 if sent else 1
 
 
+def _send_x_test(config: AppConfig, message: str) -> int:
+    client = XClient.from_config(config, force_enable=True, force_dry_run=False)
+    sent = client.send_test_message(message)
+    print("sent" if sent else "not sent")
+    return 0 if sent else 1
+
+
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
@@ -39,6 +47,8 @@ def main() -> int:
             return _print_telegram_updates(config)
         if args.command == "telegram-send-test":
             return _send_telegram_test(config, args.message)
+        if args.command == "x-send-test":
+            return _send_x_test(config, args.message)
         output = run_daily_digest(config)
     except ConfigError as error:
         print(f"Configuration error: {error}", file=sys.stderr)
@@ -50,7 +60,8 @@ def main() -> int:
     print("")
     print(
         f"Saved run {output.run_result.run_id} with "
-        f"{len(output.run_result.articles)} articles and {len(output.run_result.posts)} posts."
+        f"{len(output.run_result.articles)} articles and {len(output.run_result.posts)} posts. "
+        f"Telegram delivered={output.run_result.telegram_delivered}, X delivered={output.run_result.x_delivered}."
     )
     return 0
 
