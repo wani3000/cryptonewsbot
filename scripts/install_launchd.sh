@@ -27,5 +27,5 @@ PY
 /bin/launchctl kickstart -k "gui/$(id -u)/com.chainbounty.cryptonewsbot.daily"
 
 echo "Installed LaunchAgent at $TARGET_PATH"
-echo "Schedule: daily at 09:00 local time"
+echo "Schedule: daily at 08:00 local time"
 echo "Runtime path: $REPO_ROOT"
